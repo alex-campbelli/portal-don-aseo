@@ -145,6 +145,44 @@ button.ws-stat{cursor:pointer}
 .chip-mas{border:none;cursor:pointer;background:#fff;color:var(--navy);box-shadow:inset 0 0 0 1.5px var(--navy-light);font-family:var(--font)}
 .f-pie{padding:0 26px 22px;font-size:12.5px;color:var(--ws-muted)}
 
+.f-sel{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:13.5px;background:#fff;margin-top:4px}
+.f-ayuda{font-size:12px;color:var(--ws-muted);margin-top:5px;line-height:1.4}
+.f-sub{font-weight:600;color:#9aa4b2}
+.f-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 12px;margin-top:6px;font-size:13px}
+.f-checks label,.f-radios label{display:flex;align-items:center;gap:7px;cursor:pointer}
+.f-radios{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:13px}
+.f-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.f-mini{border:1.5px solid var(--border);background:#fff;color:var(--gray-700);border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer}
+.f-mini:hover{border-color:var(--navy);color:var(--navy)}
+.f-aviso{font-size:12px;color:var(--amber);background:var(--amber-light);border-radius:8px;padding:8px 10px;margin-top:10px;font-weight:700}
+.f-acciones{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--ws-line)}
+.f-sin-guardar{font-size:11.5px;font-weight:800;color:var(--amber);margin-right:auto}
+.f-btn{border:none;background:var(--navy);color:#fff;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:800;cursor:pointer}
+.f-btn:disabled{background:var(--gray-300);cursor:default}
+.f-btn-sec{background:#fff;color:var(--gray-700);border:1.5px solid var(--border)}
+.c-caja{border:1px solid var(--ws-line);border-radius:12px;margin-top:10px;overflow:hidden}
+.c-cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:#f6f8fd;font-size:12.5px}
+.c-cuenta{color:var(--ws-muted);font-weight:700}
+.c-botones{margin-left:auto;display:flex;gap:4px}
+.c-buscar{width:calc(100% - 20px);margin:8px 10px 0;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:12.5px}
+.c-lista{max-height:210px;overflow-y:auto;padding:6px 10px 8px}
+.c-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;font-size:12.5px;border-bottom:1px solid #f1f3f7}
+.c-item:last-child{border-bottom:none}
+.c-nom{display:flex;align-items:center;gap:7px;cursor:pointer;min-width:0}
+.c-nom i{color:#9aa4b2;font-style:normal}
+.c-cat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ws-muted);white-space:nowrap;cursor:pointer}
+.f-historial{padding:0 26px 24px}
+.f-hist-titulo{font-size:14px;font-weight:800;color:#12213b;margin-bottom:8px}
+.h-lista{border:1px solid var(--ws-line);border-radius:12px;max-height:240px;overflow-y:auto}
+.h-item{padding:9px 14px;border-bottom:1px solid var(--ws-line);font-size:12.5px}
+.h-item:last-child{border-bottom:none}
+.h-que{color:#12213b;line-height:1.45}
+.h-meta{color:var(--ws-muted);font-size:11.5px;margin-top:2px}
+.h-item-g{display:grid;grid-template-columns:150px 1fr;gap:12px}
+.h-cuando{color:var(--ws-muted);font-size:12px}
+.b-caja{background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(20,40,90,.07)}
+@media(max-width:620px){.h-item-g{grid-template-columns:1fr;gap:2px}}
+
 /* AVISO */
 #aviso{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;background:#12213b;color:#fff;font-size:13px;font-weight:700;padding:12px 18px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,30,.3);max-width:90vw}
 #aviso.error{background:var(--red)}
@@ -215,8 +253,9 @@ button.ws-stat{cursor:pointer}
       <div>
         <div class="u-titulo">Usuarios y accesos</div>
         <div class="u-sub">Quién puede entrar a cada programa y con qué permisos. Es el acceso real: el mismo que hace cumplir cada programa.</div>
-        <div class="u-nota">🔎 Por ahora solo consulta. Los cambios de acceso llegan en la siguiente fase.</div>
+        <div class="u-nota">✏️ Haz clic en una persona para ver y cambiar sus accesos.</div>
       </div>
+      <button class="f-btn f-btn-sec" onclick="irA('bitacora')">📜 Bitácora</button>
     </div>
     <div class="u-herr">
       <input type="text" id="u-buscar" placeholder="Buscar por nombre, correo o cargo" autocomplete="off" oninput="pintarUsuarios()">
@@ -240,6 +279,19 @@ button.ws-stat{cursor:pointer}
     </div>
   </main>
 
+  <!-- Bitácora (solo administradores generales) -->
+  <main class="ws-main" id="vista-bitacora" hidden>
+    <div class="u-cab">
+      <div>
+        <div class="u-titulo">Bitácora</div>
+        <div class="u-sub">Todos los cambios de acceso hechos desde el Portal: a quién, qué cambió, quién lo hizo y cuándo.</div>
+      </div>
+      <button class="f-btn f-btn-sec" onclick="irA('usuarios')">← Usuarios y accesos</button>
+    </div>
+    <div class="u-herr"><input type="text" id="b-buscar" placeholder="Buscar por persona, quién lo hizo o cambio" autocomplete="off" oninput="pintarBitacora()"></div>
+    <div class="b-caja" id="b-filas"></div>
+  </main>
+
   <footer class="ws-footer">© <span id="anio">2026</span> Don Aseo Ltda. Todos los derechos reservados.</footer>
 </div>
 
@@ -252,7 +304,7 @@ button.ws-stat{cursor:pointer}
 
 <script>
 // ════════════════════════════════════════════════════════════════════
-//  PORTAL DON ASEO — Fase 2 (consulta)
+//  PORTAL DON ASEO — Fase 3a (dar y quitar accesos)
 //  El Portal solo pregunta a la base de datos (funciones portal_*).
 //  Quién ve qué lo decide la base, no esta página.
 // ════════════════════════════════════════════════════════════════════
@@ -365,8 +417,8 @@ async function arrancar() {
 
 function mostrarLogin(msg) {
   yo = null; usuarios = null; catalogo = null;
-  $('buscar-programa').value = ''; $('u-buscar').value = ''; $('u-filtro').value = '';
-  $('app').hidden = true; $('login').hidden = false; cerrarFicha();
+  $('buscar-programa').value = ''; $('u-buscar').value = ''; $('u-filtro').value = ''; $('b-buscar').value = ''; bitacora = null;
+  $('app').hidden = true; $('login').hidden = false; cerrarFicha(true);
   const e = $('login-err');
   if (msg) { e.textContent = msg; e.hidden = false; } else e.hidden = true;
   setTimeout(() => $('l-email').focus(), 50);
@@ -497,12 +549,15 @@ window.addEventListener('hashchange', () => { if (yo) mostrarVista(); });
 
 async function mostrarVista() {
   const vista = (location.hash.replace(/^#\/?/, '').split('/')[0]) || '';
-  const enUsuarios = vista === 'usuarios' && yo.es_admin;
-  $('vista-inicio').hidden = enUsuarios;
-  $('vista-usuarios').hidden = !enUsuarios;
-  $('btn-usuarios').classList.toggle('activo', enUsuarios);
+  const v = yo.es_admin && (vista === 'usuarios' || vista === 'bitacora') ? vista : '';
+  if (v !== 'usuarios') cerrarFicha(true);
+  $('vista-inicio').hidden = v !== '';
+  $('vista-usuarios').hidden = v !== 'usuarios';
+  $('vista-bitacora').hidden = v !== 'bitacora';
+  $('btn-usuarios').classList.toggle('activo', v !== '');
   if (yo.es_admin && !usuarios) await cargarUsuarios();
-  if (enUsuarios) pintarUsuarios();
+  if (v === 'usuarios') pintarUsuarios();
+  else if (v === 'bitacora') cargarBitacora();
   else { pintarEstadisticas(); pintarTarjetas(); }
   window.scrollTo(0, 0);
 }
@@ -571,52 +626,170 @@ function contratosDe(modulo, ids) {
   return listaChips(nombres, 'Ninguno asignado', 8);
 }
 
-function seccionPrograma(clave, a) {
+// ── Ficha de una persona: ver y cambiar sus accesos ────────────────
+// Cada programa se guarda por separado, con su propio botón «Guardar».
+// La base de datos valida todo otra vez (solo admins generales, nunca
+// un programa sin administrador) y deja la bitácora.
+const AYUDA = {
+  documental: { sin_acceso: 'No entra a Gestión Documental.', invitado: 'Solo lee lo de sus áreas.', viewer: 'Lee y descarga lo de sus áreas.',
+                supervisor: 'Crea en sus áreas y edita o borra solo lo suyo.', editor: 'Crea, edita y borra todo en sus áreas.', admin: 'Todo, en todas las áreas.' },
+  rh: { sin_acceso: 'No entra a RH.', viewer: 'Tablero y empleados, solo lectura.', auxiliar: 'Tablero, empleados (solo lectura) y novedades.',
+        editor: 'Todo lo de RH menos la administración.', admin: 'Todo, incluidos todos los datos de salud.' },
+  firmas: { sin_acceso: 'No entra a Firmas.', visualizador: 'Ve sus módulos y contratos, sin cambiar nada.',
+            editor: 'Trabaja en sus módulos y contratos.', admin: 'Todo: todos los módulos y todos los contratos.' },
+  academia: { sin_acceso: 'No entra a la Academia.', viewer: 'Ve inducciones, reinducciones y certificados, y exporta.',
+              admin: 'Todo: editar, borrar, clientes y papelera.' },
+  caja: { sin_acceso: 'No entra a Caja menor.', acceso: 'Hace todo en Caja menor (todavía no tiene niveles).' }
+};
+const OPCIONES = {
+  documental: [['sin_acceso', 'Sin acceso'], ['invitado', 'Invitado'], ['viewer', 'Visualizador'], ['supervisor', 'Supervisor'], ['editor', 'Editor'], ['admin', 'Administrador']],
+  rh: [['sin_acceso', 'Sin acceso'], ['viewer', 'Visualizador'], ['auxiliar', 'Auxiliar'], ['editor', 'Editor'], ['admin', 'Administrador']],
+  firmas: [['sin_acceso', 'Sin acceso'], ['visualizador', 'Visualizador'], ['editor', 'Editor'], ['admin', 'Administrador']],
+  academia: [['sin_acceso', 'Sin acceso'], ['viewer', 'Solo lectura'], ['admin', 'Administrador']],
+  caja: [['sin_acceso', 'Sin acceso'], ['acceso', 'Con acceso']]
+};
+const CLAVES_AREAS = Object.keys(ETQ.areas);
+const CLAVES_MEDICOS = Object.keys(ETQ.medicos);
+let borradores = {}, originales = {};
+
+const clonar = o => JSON.parse(JSON.stringify(o));
+const enOrden = (arr, orden) => orden.filter(x => (arr || []).includes(x));
+function usuarioAbierto() { return (usuarios || []).find(x => x.id === fichaAbierta); }
+
+// Lo que hay guardado → forma editable
+function aBorrador(k, a) {
   a = a || {};
-  const r = resumen(clave, a);
-  const prog = programas.find(p => p.clave === clave) || {};
-  const color = prog.color || '#0039b3';
-  let cuerpo = '';
-  if (clave === 'documental' && a.tiene) {
-    cuerpo += `<div class="f-fila">Rol</div><div class="f-val">${esc(ETQ.documental[a.rol] || a.rol)}</div>`;
-    cuerpo += `<div class="f-fila">Áreas</div>`;
-    cuerpo += a.rol === 'admin' ? `<div class="f-val">Todas (es administrador)</div>`
-            : a.areas == null ? `<div class="f-val">Todas las áreas</div>`
-            : listaChips(lista(a.areas, ETQ.areas), 'Ninguna área');
+  if (k === 'documental') return { rol: a.tiene ? a.rol : 'sin_acceso', areas: a.tiene && a.rol !== 'admin' && Array.isArray(a.areas) ? [...a.areas] : null };
+  if (k === 'rh') return { rol: a.tiene ? a.rol : 'sin_acceso', medicos: [...(a.medicos || [])] };
+  if (k === 'firmas') {
+    const c = a.contratos || {};
+    return { rol: a.tiene ? (a.admin ? 'admin' : a.rol) : 'sin_acceso', modulos: [...(a.modulos || [])],
+             contratos: { dotacion: [...(c.dotacion || [])], dotacion_catalogo: [...(c.dotacion_catalogo || [])], dotacionlegal: [...(c.dotacionlegal || [])],
+                          inspecciones: [...(c.inspecciones || [])], actividades: [...(c.actividades || [])] } };
   }
-  if (clave === 'rh' && a.tiene) {
-    cuerpo += `<div class="f-fila">Rol</div><div class="f-val">${esc(ETQ.rh[a.rol] || a.rol)}</div>`;
-    cuerpo += `<div class="f-fila">Seguimientos médicos</div>`;
-    cuerpo += a.rol === 'admin' ? `<div class="f-val">Todo (el administrador de RH ve todo lo médico)</div>`
-            : (a.medicos || []).includes('admin') ? `<div class="f-val">Todos los permisos (Responsable SST)</div>`
-            : listaChips(lista(a.medicos, ETQ.medicos), 'Sin permisos médicos');
+  if (k === 'academia') return { rol: a.tiene ? a.rol : 'sin_acceso' };
+  if (k === 'caja') return { rol: a.tiene ? 'acceso' : 'sin_acceso' };
+}
+// Forma editable → lo que se manda a la base (siempre ordenado, para comparar)
+function carga(k, b) {
+  if (k === 'documental') return { rol: b.rol, areas: (b.rol === 'sin_acceso' || b.rol === 'admin' || b.areas == null) ? null : enOrden(b.areas, CLAVES_AREAS) };
+  if (k === 'rh') return { rol: b.rol, medicos: (b.rol === 'sin_acceso' || b.rol === 'admin') ? [] : enOrden(b.medicos, CLAVES_MEDICOS) };
+  if (k === 'firmas') {
+    if (b.rol === 'sin_acceso') return { rol: 'sin_acceso', modulos: [], contratos: {} };
+    const mods = enOrden(b.modulos, ORDEN_MOD), ord = l => [...(l || [])].sort();
+    const dot = mods.includes('dotacion') ? ord(b.contratos.dotacion) : [];
+    return { rol: b.rol, modulos: mods, contratos: {
+      dotacion: dot, dotacion_catalogo: ord(b.contratos.dotacion_catalogo).filter(x => dot.includes(x)),
+      dotacionlegal: mods.includes('dotacionlegal') ? ord(b.contratos.dotacionlegal) : [],
+      inspecciones: mods.includes('inspecciones') ? ord(b.contratos.inspecciones) : [],
+      actividades: mods.includes('actividades') ? ord(b.contratos.actividades) : [] } };
   }
-  if (clave === 'firmas' && a.existe) {
-    if (a.activo === false) cuerpo += `<div class="f-val" style="margin-top:6px">Su acceso a Firmas está desactivado.</div>`;
-    if (a.admin) cuerpo += `<div class="f-fila">Rol</div><div class="f-val">Administrador: todos los módulos y contratos</div>`;
-    else if (a.tiene || (a.modulos || []).length) {
-      cuerpo += `<div class="f-fila">Rol</div><div class="f-val">${esc(ETQ.firmas[a.rol] || a.rol)}</div>`;
-      cuerpo += `<div class="f-fila">Módulos</div>` + listaChips(lista(ordenModulos(a.modulos), ETQ.firmasMod), 'Ninguno');
-      for (const m of MOD_CONTRATOS) {
-        if (!(a.modulos || []).includes(m)) continue;
-        cuerpo += `<div class="f-fila">Contratos de ${esc(ETQ.firmasMod[m])}</div>` + contratosDe(m, a.contratos?.[m] || []);
-      }
-      const cat = a.contratos?.dotacion_catalogo || [];
-      if (cat.length) cuerpo += `<div class="f-fila">Puede agregar al catálogo de EPP en</div>` + contratosDe('dotacion', cat);
+  return { rol: b.rol };
+}
+const hayCambios = k => JSON.stringify(carga(k, borradores[k])) !== JSON.stringify(carga(k, originales[k]));
+const esAdminEn = (k, b) => b.rol === 'admin';
+
+// Mismas reglas de la ventana 🩺 de RH: «admin» = todos, cualquier permiso incluye «ver», sin «ver» no hay nada.
+function aplicarMedico(lista, valor, marcado) {
+  let s = new Set(lista);
+  if (valor === 'admin') { if (marcado) s = new Set(CLAVES_MEDICOS); else s.delete('admin'); }
+  else if (valor === 'ver' && !marcado) s = new Set();
+  else if (marcado) { s.add(valor); s.add('ver'); }
+  else { s.delete(valor); s.delete('admin'); }
+  return enOrden([...s], CLAVES_MEDICOS);
+}
+
+function opcionesSelect(k, actual) {
+  return OPCIONES[k].map(([v, t]) => `<option value="${v}"${v === actual ? ' selected' : ''}>${esc(t)}</option>`).join('');
+}
+function casillas(campo, items, marcados, desactivado) {
+  return `<div class="f-checks">${items.map(([v, t]) => `<label><input type="checkbox" data-campo="${campo}" value="${esc(v)}"${marcados.includes(v) ? ' checked' : ''}${desactivado ? ' disabled' : ''}> ${esc(t)}</label>`).join('')}</div>`;
+}
+
+function editorContratos(mod, b) {
+  const todos = catalogo?.firmas?.contratos?.[mod] || [];
+  const sel = b.contratos[mod] || [];
+  const cat = b.contratos.dotacion_catalogo || [];
+  // Primero los asignados, luego el resto, cada grupo en orden alfabético.
+  const lista = [...todos].sort((x, y) => (sel.includes(y.id) - sel.includes(x.id)) || x.nombre.localeCompare(y.nombre, 'es'));
+  return `<div class="c-caja" data-mod="${mod}">
+    <div class="c-cab">
+      <b>Contratos de ${esc(ETQ.firmasMod[mod])}</b>
+      <span class="c-cuenta" data-cuenta="${mod}">${sel.length} de ${todos.length}</span>
+      <span class="c-botones"><button type="button" class="f-mini" data-accion="contratos-todos" data-mod="${mod}">Todos</button><button type="button" class="f-mini" data-accion="contratos-ninguno" data-mod="${mod}">Ninguno</button></span>
+    </div>
+    ${todos.length > 8 ? `<input class="c-buscar" type="text" placeholder="Buscar contrato" data-mod="${mod}" autocomplete="off">` : ''}
+    <div class="c-lista">${lista.length ? lista.map(c => {
+      const marcado = sel.includes(c.id);
+      return `<div class="c-item" data-nombre="${esc(c.nombre.toLowerCase())}">
+        <label class="c-nom"><input type="checkbox" data-campo="contrato" data-mod="${mod}" value="${esc(c.id)}"${marcado ? ' checked' : ''}> ${esc(c.nombre)}${c.activo === false ? ' <i>(inactivo)</i>' : ''}</label>
+        ${mod === 'dotacion' ? `<label class="c-cat" title="Puede agregar productos al catálogo de EPP en este contrato"><input type="checkbox" data-campo="catalogo" value="${esc(c.id)}"${cat.includes(c.id) ? ' checked' : ''}${marcado ? '' : ' disabled'}> catálogo</label>` : ''}
+      </div>`; }).join('') : '<div class="f-val" style="padding:8px">No hay contratos creados.</div>'}</div>
+  </div>`;
+}
+
+function htmlPrograma(k) {
+  const u = usuarioAbierto(), b = borradores[k];
+  const prog = programas.find(p => p.clave === k) || {};
+  let cuerpo = `<label class="f-fila">${k === 'caja' || k === 'academia' ? 'Acceso' : 'Rol'}</label>
+    <select class="f-sel" data-campo="rol">${opcionesSelect(k, b.rol)}</select>
+    <div class="f-ayuda">${esc(AYUDA[k][b.rol] || '')}</div>`;
+  if (k === 'documental' && b.rol !== 'sin_acceso') {
+    if (b.rol === 'admin') cuerpo += `<div class="f-fila">Áreas</div><div class="f-val">Todas (es administrador)</div>`;
+    else {
+      cuerpo += `<div class="f-fila">Áreas</div>
+        <div class="f-radios"><label><input type="radio" name="doc-modo" data-campo="modo-areas" value="todas"${b.areas == null ? ' checked' : ''}> Todas las áreas</label>
+        <label><input type="radio" name="doc-modo" data-campo="modo-areas" value="algunas"${b.areas != null ? ' checked' : ''}> Solo estas</label></div>`;
+      if (b.areas != null) cuerpo += casillas('area', (catalogo?.documental?.areas || []).map(a => [a.clave, a.nombre]), b.areas);
     }
   }
-  if (clave === 'academia' && a.tiene) cuerpo += `<div class="f-fila">Nivel</div><div class="f-val">${esc(ETQ.academia[a.rol] || a.rol)}</div>`;
-  if (clave === 'caja' && a.existe && a.desactivado_en) cuerpo += `<div class="f-val" style="margin-top:6px">Desactivado el ${esc(fecha(a.desactivado_en))}.</div>`;
-  if (!cuerpo && !a.tiene) cuerpo = `<div class="f-val" style="color:#9aa4b2">No puede entrar a este programa.</div>`;
-  return `<div class="f-prog" style="--pc:${esc(color)}">
-    <div class="f-prog-cab"><div class="f-prog-nombre">${esc(ICONO_PROG[clave])} ${esc(prog.nombre || NOMBRE_PROG[clave])}</div>${chip(r)}</div>
-    ${cuerpo}</div>`;
+  if (k === 'rh' && b.rol !== 'sin_acceso') {
+    cuerpo += `<div class="f-fila">Seguimientos médicos <span class="f-sub">(datos de salud)</span></div>`;
+    if (b.rol === 'admin') cuerpo += `<div class="f-val">Todo: el administrador de RH ve todo lo médico.</div>`;
+    else cuerpo += `<div class="f-presets">
+        <button type="button" class="f-mini" data-accion="medico-preset" data-valor="todos">Responsable SST</button>
+        <button type="button" class="f-mini" data-accion="medico-preset" data-valor="consulta">Solo consulta</button>
+        <button type="button" class="f-mini" data-accion="medico-preset" data-valor="ninguno">Ninguno</button></div>`
+      + casillas('medico', (catalogo?.rh?.medicos || []).map(m => [m.clave, m.nombre]), b.medicos);
+  }
+  if (k === 'firmas' && b.rol !== 'sin_acceso') {
+    if (b.rol === 'admin') cuerpo += `<div class="f-val" style="margin-top:8px">Como administrador entra a todos los módulos y contratos.</div>`;
+    else {
+      cuerpo += `<div class="f-fila">Módulos</div>` + casillas('modulo', (catalogo?.firmas?.modulos || []).map(m => [m.clave, m.nombre]), b.modulos);
+      for (const m of MOD_CONTRATOS) if (b.modulos.includes(m)) cuerpo += editorContratos(m, b);
+      if (!b.modulos.length) cuerpo += `<div class="f-aviso">Sin módulos no podrá hacer nada en Firmas.</div>`;
+    }
+  }
+  if (k === 'firmas' && u.accesos?.firmas?.existe && u.accesos.firmas.activo === false)
+    cuerpo += `<div class="f-aviso">Hoy su cuenta está desactivada en Firmas. Si le das acceso, queda activa otra vez.</div>`;
+  const cambios = hayCambios(k);
+  return `<div class="f-prog-cab"><div class="f-prog-nombre">${esc(ICONO_PROG[k])} ${esc(prog.nombre || NOMBRE_PROG[k])}</div>${chip(resumen(k, u.accesos?.[k]))}</div>
+    ${cuerpo}
+    <div class="f-acciones">
+      <span class="f-sin-guardar"${cambios ? '' : ' hidden'}>● Cambios sin guardar</span>
+      <button type="button" class="f-btn f-btn-sec" data-accion="deshacer"${cambios ? '' : ' hidden'}>Deshacer</button>
+      <button type="button" class="f-btn" data-accion="guardar"${cambios ? '' : ' disabled'}>Guardar</button>
+    </div>`;
+}
+function repintarPrograma(k) {
+  const el = document.querySelector(`#ficha [data-prog="${k}"]`);
+  if (el) el.innerHTML = htmlPrograma(k);
+}
+function actualizarPie(k) {
+  const el = document.querySelector(`#ficha [data-prog="${k}"]`);
+  if (!el) return;
+  const cambios = hayCambios(k);
+  el.querySelector('.f-sin-guardar').hidden = !cambios;
+  el.querySelector('[data-accion="deshacer"]').hidden = !cambios;
+  el.querySelector('[data-accion="guardar"]').disabled = !cambios;
 }
 
 function abrirFicha(id) {
   const u = (usuarios || []).find(x => x.id === id);
   if (!u) return;
   fichaAbierta = id;
+  borradores = {}; originales = {};
+  for (const k of PROGRAMAS) { originales[k] = aBorrador(k, u.accesos?.[k]); borradores[k] = clonar(originales[k]); }
   const marcas = (u.es_admin ? ' <span class="chip chip-ok">Administrador general</span>' : '')
                + (u.suspendido ? ' <span class="chip chip-ojo">Cuenta suspendida</span>' : '');
   $('ficha').innerHTML = `
@@ -629,12 +802,152 @@ function abrirFicha(id) {
       </div>
       <button class="f-cerrar" onclick="cerrarFicha()" aria-label="Cerrar">✕</button>
     </div>
-    <div class="f-cuerpo">${PROGRAMAS.map(k => seccionPrograma(k, u.accesos?.[k])).join('')}</div>
-    <div class="f-pie">Esto es lo que cada programa le deja hacer hoy. En la siguiente fase podrás cambiarlo desde aquí.</div>`;
+    <div class="f-cuerpo">${PROGRAMAS.map(k => {
+      const color = (programas.find(p => p.clave === k) || {}).color || '#0039b3';
+      return `<div class="f-prog" data-prog="${k}" style="--pc:${esc(color)}">${htmlPrograma(k)}</div>`; }).join('')}</div>
+    <div class="f-historial"><div class="f-hist-titulo">Historial de cambios</div><div id="f-historial">Cargando…</div></div>`;
   $('ficha-fondo').hidden = false;
+  cargarHistorial(id);
 }
-function cerrarFicha() { fichaAbierta = null; $('ficha-fondo').hidden = true; }
+
+function cerrarFicha(forzar) {
+  if (!forzar && fichaAbierta && PROGRAMAS.some(hayCambios) && !confirm('Tienes cambios sin guardar. ¿Cerrar de todos modos?')) return;
+  fichaAbierta = null; $('ficha-fondo').hidden = true;
+}
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && fichaAbierta) cerrarFicha(); });
+
+// Cambios en los controles de la ficha
+$('ficha').addEventListener('change', ev => {
+  const el = ev.target, caja = el.closest('[data-prog]');
+  if (!caja || !el.dataset.campo) return;
+  const k = caja.dataset.prog, b = borradores[k], campo = el.dataset.campo;
+  if (campo === 'rol') {
+    b.rol = el.value;
+    return repintarPrograma(k);
+  }
+  if (campo === 'modo-areas') { b.areas = el.value === 'todas' ? null : (b.areas || []); return repintarPrograma(k); }
+  if (campo === 'area') { b.areas = el.checked ? [...new Set([...(b.areas || []), el.value])] : (b.areas || []).filter(x => x !== el.value); return actualizarPie(k); }
+  if (campo === 'medico') { b.medicos = aplicarMedico(b.medicos, el.value, el.checked); return repintarPrograma(k); }
+  if (campo === 'modulo') {
+    b.modulos = el.checked ? [...new Set([...b.modulos, el.value])] : b.modulos.filter(x => x !== el.value);
+    return repintarPrograma(k);
+  }
+  if (campo === 'contrato') {
+    const mod = el.dataset.mod, lista = b.contratos[mod] || [];
+    b.contratos[mod] = el.checked ? [...new Set([...lista, el.value])] : lista.filter(x => x !== el.value);
+    if (mod === 'dotacion') {
+      const cat = el.closest('.c-item').querySelector('[data-campo="catalogo"]');
+      if (cat) { cat.disabled = !el.checked; if (!el.checked) { cat.checked = false; b.contratos.dotacion_catalogo = b.contratos.dotacion_catalogo.filter(x => x !== el.value); } }
+    }
+    const cuenta = caja.querySelector(`[data-cuenta="${mod}"]`);
+    if (cuenta) cuenta.textContent = `${b.contratos[mod].length} de ${(catalogo?.firmas?.contratos?.[mod] || []).length}`;
+    return actualizarPie(k);
+  }
+  if (campo === 'catalogo') {
+    const l = b.contratos.dotacion_catalogo || [];
+    b.contratos.dotacion_catalogo = el.checked ? [...new Set([...l, el.value])] : l.filter(x => x !== el.value);
+    return actualizarPie(k);
+  }
+});
+$('ficha').addEventListener('input', ev => {
+  if (!ev.target.matches('.c-buscar')) return;
+  const q = ev.target.value.trim().toLowerCase();
+  ev.target.closest('.c-caja').querySelectorAll('.c-item').forEach(it => { it.hidden = !!q && !it.dataset.nombre.includes(q); });
+});
+$('ficha').addEventListener('click', ev => {
+  const bt = ev.target.closest('[data-accion]'), caja = ev.target.closest('[data-prog]');
+  if (!bt || !caja) return;
+  const k = caja.dataset.prog, b = borradores[k], acc = bt.dataset.accion;
+  if (acc === 'guardar') return guardarPrograma(k);
+  if (acc === 'deshacer') { borradores[k] = clonar(originales[k]); return repintarPrograma(k); }
+  if (acc === 'medico-preset') {
+    b.medicos = bt.dataset.valor === 'todos' ? [...CLAVES_MEDICOS] : bt.dataset.valor === 'consulta' ? ['ver'] : [];
+    return repintarPrograma(k);
+  }
+  if (acc === 'contratos-todos' || acc === 'contratos-ninguno') {
+    const mod = bt.dataset.mod;
+    b.contratos[mod] = acc === 'contratos-todos' ? (catalogo?.firmas?.contratos?.[mod] || []).map(c => c.id) : [];
+    if (mod === 'dotacion' && acc === 'contratos-ninguno') b.contratos.dotacion_catalogo = [];
+    return repintarPrograma(k);
+  }
+});
+
+function mensajeError(error, k) {
+  const m = String(error?.message || error || '');
+  if (m.includes('ultimo_admin')) return `No se puede: ${NOMBRE_PROG[k]} quedaría sin ningún administrador. Nombra primero a otro administrador.`;
+  if (m.includes('no_autorizado')) return 'Tu cuenta no es administradora general del Portal.';
+  if (m.includes('contrato_invalido')) return 'Alguno de los contratos ya no existe. Recarga la página y vuelve a intentarlo.';
+  if (m.includes('usuario_no_existe')) return 'Esa cuenta ya no existe.';
+  return 'No se pudo guardar: ' + m;
+}
+
+async function guardarPrograma(k) {
+  const u = usuarioAbierto();
+  if (!u || !hayCambios(k)) return;
+  const b = borradores[k], o = originales[k], nom = NOMBRE_PROG[k];
+  if (b.rol === 'sin_acceso' && o.rol !== 'sin_acceso'
+      && !confirm(`¿Quitarle a ${u.nombre} el acceso a ${nom}?`)) return;
+  if (k === 'rh' && b.rol === 'admin' && o.rol !== 'admin'
+      && !confirm(`Como administrador de RH, ${u.nombre} verá todos los datos de salud (Seguimientos médicos). ¿Continuar?`)) return;
+  if (u.id === yo.id && esAdminEn(k, o) && !esAdminEn(k, b)
+      && !confirm(`Te vas a quitar a ti mismo el rol de administrador en ${nom}. ¿Continuar?`)) return;
+  const boton = document.querySelector(`#ficha [data-prog="${k}"] [data-accion="guardar"]`);
+  if (boton) { boton.disabled = true; boton.textContent = 'Guardando…'; }
+  const { data, error } = await sb.rpc('portal_guardar_acceso', { p_usuario: u.id, p_programa: k, p_acceso: carga(k, b) });
+  if (error) {
+    if (esErrorDeSesion(error)) return mostrarLogin('Tu sesión terminó. Vuelve a ingresar.');
+    aviso(mensajeError(error, k), true);
+    if (boton) { boton.disabled = false; boton.textContent = 'Guardar'; }
+    return;
+  }
+  u.accesos = data.accesos;
+  originales[k] = aBorrador(k, u.accesos[k]);
+  borradores[k] = clonar(originales[k]);
+  repintarPrograma(k);
+  pintarUsuarios();
+  aviso(data.cambio ? `Guardado: ${nom} de ${primerNombre(u.nombre)}.` : 'No había nada que cambiar.');
+  if ((data.avisos || []).length) setTimeout(() => aviso(data.avisos.join(' '), true), 1200);
+  cargarHistorial(u.id);
+  if (u.id === yo.id) refrescarMisProgramas();
+}
+
+// Si cambié mis propios accesos, actualizo mis tarjetas.
+async function refrescarMisProgramas() {
+  const { data } = await sb.rpc('portal_inicio');
+  if (data) { yo = data.persona; programas = data.programas || []; pintarCabecera(); }
+}
+
+async function cargarHistorial(id) {
+  const caja = $('f-historial');
+  if (!caja) return;
+  const { data, error } = await sb.rpc('portal_bitacora', { p_persona: id, p_limite: 30 });
+  if (fichaAbierta !== id) return;
+  if (error) { caja.textContent = 'No se pudo cargar el historial.'; return; }
+  caja.innerHTML = (data || []).length
+    ? `<div class="h-lista">${data.map(h => `<div class="h-item"><div class="h-que">${esc(h.descripcion)}</div>
+        <div class="h-meta">${esc(fecha(h.cuando))} · por ${esc(h.actor || h.actor_correo || '—')}</div></div>`).join('')}</div>`
+    : '<div class="f-val" style="color:#9aa4b2">Todavía no hay cambios hechos desde el Portal.</div>';
+}
+
+// ── Bitácora general ────────────────────────────────────────────────
+let bitacora = null;
+async function cargarBitacora() {
+  $('b-filas').innerHTML = '<div class="f-val" style="padding:20px;color:#8994a6">Cargando…</div>';
+  const { data, error } = await sb.rpc('portal_bitacora', { p_persona: null, p_limite: 300 });
+  if (error) { $('b-filas').innerHTML = '<div class="f-val" style="padding:20px">No se pudo cargar la bitácora.</div>'; return; }
+  bitacora = data || [];
+  pintarBitacora();
+}
+function pintarBitacora() {
+  if (!bitacora) return;
+  const q = ($('b-buscar').value || '').trim().toLowerCase();
+  const filas = bitacora.filter(h => !q || `${h.persona} ${h.persona_correo} ${h.actor} ${h.descripcion}`.toLowerCase().includes(q));
+  $('b-filas').innerHTML = filas.length
+    ? filas.map(h => `<div class="h-item h-item-g"><div class="h-cuando">${esc(fecha(h.cuando))}</div>
+        <div><div class="h-que"><b>${esc(h.persona || h.persona_correo || '—')}</b> · ${esc(h.descripcion)}</div>
+        <div class="h-meta">por ${esc(h.actor || h.actor_correo || '—')}</div></div></div>`).join('')
+    : `<div class="f-val" style="padding:20px;color:#8994a6">${bitacora.length ? 'Nada coincide con la búsqueda.' : 'Todavía no hay cambios hechos desde el Portal.'}</div>`;
+}
 
 arrancar();
 </script>

@@ -620,11 +620,26 @@ function pintarTarjetas() {
   }).join('');
 }
 
-// Abre el programa en otra pestaña. (En la fase 4 entrará ya con sesión, con un pase de un solo uso.)
-function entrarPrograma(clave) {
+// Abre el programa en otra pestaña. Si el programa ya tiene su «puerta» (fase 4),
+// entra ya con la sesión puesta, con un pase de un solo uso: sin volver a escribir la contraseña.
+let entrando = false;
+async function entrarPrograma(clave) {
   const p = programas.find(x => x.clave === clave);
-  if (!p || !p.acceso || !p.url) return;
-  window.open(p.url, '_blank', 'noopener');
+  if (!p || !p.acceso || !p.url || entrando) return;
+  if (!p.pase) { window.open(p.url, '_blank', 'noopener'); return; }
+  // La pestaña se abre de una vez: si se abriera después de pedir el pase, el navegador la bloquearía.
+  const w = window.open('', '_blank');
+  if (!w) return aviso('El navegador bloqueó la pestaña nueva. Permite las ventanas emergentes para este sitio.', true);
+  try { w.document.title = 'Entrando…'; w.document.body.innerHTML = `<p style="font:15px sans-serif;color:#555;padding:28px">Entrando a ${esc(p.nombre)}…</p>`; } catch (e) { /* solo es el aviso */ }
+  entrando = true;
+  let r;
+  try { r = await llamarFuncion({ accion: 'pase', programa: clave }); }
+  catch (e) { r = { ok: false, error: String(e?.message || e) }; }
+  finally { entrando = false; }
+  w.opener = null;
+  if (r?.ok && r.url) return w.location.replace(r.url);
+  w.location.replace(p.url);   // sin pase, entra como siempre: el programa le pide la contraseña
+  aviso(`No se pudo entrar directo a ${p.nombre}: te pedirá la contraseña. ${textoError(r)}`, true);
 }
 
 // ── Navegación ──────────────────────────────────────────────────────
@@ -1084,7 +1099,8 @@ const MENSAJES = {
   tiene_registros: 'No se puede eliminar: tiene documentos u otros registros a su nombre. Mejor suspéndela.',
   sin_correo: 'Esa cuenta no tiene correo.',
   no_se_pudo_enviar: 'No se pudo enviar el correo. Supabase limita cuántos correos se envían por hora; intenta más tarde.',
-  usuario_no_existe: 'Esa cuenta ya no existe.'
+  usuario_no_existe: 'Esa cuenta ya no existe.',
+  sin_pase: 'Ese programa todavía no deja entrar directo desde el Portal, o ya no tienes acceso.'
 };
 function textoError(r) {
   const codigo = String(r?.error || '');

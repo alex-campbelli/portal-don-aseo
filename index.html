@@ -183,6 +183,37 @@ button.ws-stat{cursor:pointer}
 .b-caja{background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(20,40,90,.07)}
 @media(max-width:620px){.h-item-g{grid-template-columns:1fr;gap:2px}}
 
+/* CUENTAS (fase 3b) */
+.f-acciones-cuenta{display:flex;flex-wrap:wrap;gap:8px;padding:12px 26px;border-bottom:1px solid var(--ws-line);background:#fafbfe}
+.f-acc{border:1.5px solid var(--border);background:#fff;color:var(--gray-700);border-radius:10px;padding:7px 12px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:var(--font)}
+.f-acc:hover,.f-acc.activa{border-color:var(--navy);color:var(--navy)}
+.f-acc.activa{background:var(--navy-light)}
+.f-acc.peligro{color:var(--red)}
+.f-acc.peligro:hover{border-color:var(--red)}
+#f-panel{padding:16px 26px;border-bottom:1px solid var(--ws-line);background:#fbfcff}
+.p-titulo{font-size:14px;font-weight:800;color:#12213b;margin-bottom:10px}
+.p-fila{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
+.p-campo{display:flex;flex-direction:column;gap:4px;min-width:200px;flex:1}
+.p-campo label{font-size:12px;font-weight:700;color:var(--gray-700)}
+.p-campo input{padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:13.5px;width:100%}
+.p-nota{font-size:12px;color:var(--ws-muted);line-height:1.5;margin-top:4px}
+.p-peligro{font-size:12.5px;color:var(--red);background:var(--red-light);border-radius:10px;padding:10px 12px;margin-bottom:10px;line-height:1.5}
+.f-btn.peligro{background:var(--red)}
+.f-suspendida{margin:16px 26px 0;padding:12px 14px;border-radius:12px;background:var(--amber-light);color:var(--amber);font-weight:800;font-size:13px;line-height:1.5}
+.f-cuerpo.bloqueado .f-prog{opacity:.55;pointer-events:none}
+.foto-grande{width:72px;height:72px;border-radius:50%;background:var(--navy-light);color:var(--navy);font-weight:800;font-size:24px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.foto-grande img{width:100%;height:100%;object-fit:cover}
+.clave-caja{display:flex;gap:6px;align-items:center}
+.clave-caja input{flex:1;min-width:0}
+.ws-user{cursor:pointer;transition:background .14s}
+.ws-user:hover{background:rgba(255,255,255,.12)}
+.d-caja{padding:24px 26px}
+.d-titulo{font-size:19px;font-weight:800;color:#12213b;margin-bottom:4px}
+.d-sub{font-size:13px;color:var(--ws-muted);margin-bottom:16px;line-height:1.5}
+.d-pie{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.d-exito{background:var(--green-light);color:var(--green-dark);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.8;margin-bottom:12px}
+.d-exito code{background:#fff;border-radius:6px;padding:2px 8px;font-size:13.5px;color:#12213b;user-select:all}
+
 /* AVISO */
 #aviso{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;background:#12213b;color:#fff;font-size:13px;font-weight:700;padding:12px 18px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,30,.3);max-width:90vw}
 #aviso.error{background:var(--red)}
@@ -225,7 +256,7 @@ button.ws-stat{cursor:pointer}
     </div>
     <div class="ws-header-right">
       <button class="ws-nav-btn" id="btn-usuarios" onclick="irA('usuarios')" hidden>👥 <span>Usuarios y accesos</span></button>
-      <div class="ws-user">
+      <div class="ws-user" onclick="abrirMiPerfil()" title="Mi perfil" role="button" tabindex="0">
         <div class="ws-user-name" id="cab-nombre"></div>
         <div class="ws-avatar" id="cab-avatar"></div>
       </div>
@@ -255,7 +286,10 @@ button.ws-stat{cursor:pointer}
         <div class="u-sub">Quién puede entrar a cada programa y con qué permisos. Es el acceso real: el mismo que hace cumplir cada programa.</div>
         <div class="u-nota">✏️ Haz clic en una persona para ver y cambiar sus accesos.</div>
       </div>
-      <button class="f-btn f-btn-sec" onclick="irA('bitacora')">📜 Bitácora</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="f-btn" onclick="abrirNuevoUsuario()">＋ Nuevo usuario</button>
+        <button class="f-btn f-btn-sec" onclick="irA('bitacora')">📜 Bitácora</button>
+      </div>
     </div>
     <div class="u-herr">
       <input type="text" id="u-buscar" placeholder="Buscar por nombre, correo o cargo" autocomplete="off" oninput="pintarUsuarios()">
@@ -299,12 +333,15 @@ button.ws-stat{cursor:pointer}
 <div class="modal-fondo" id="ficha-fondo" hidden onclick="if(event.target===this)cerrarFicha()">
   <div class="modal" id="ficha" role="dialog" aria-modal="true"></div>
 </div>
+<div class="modal-fondo" id="dialogo-fondo" hidden style="z-index:45" onclick="if(event.target===this)cerrarDialogo()">
+  <div class="modal" id="dialogo" role="dialog" aria-modal="true" style="width:580px"></div>
+</div>
 <div id="aviso" hidden></div>
 <div id="cargando" hidden>Cargando…</div>
 
 <script>
 // ════════════════════════════════════════════════════════════════════
-//  PORTAL DON ASEO — Fase 3a (dar y quitar accesos)
+//  PORTAL DON ASEO — Fase 3b (accesos y cuentas)
 //  El Portal solo pregunta a la base de datos (funciones portal_*).
 //  Quién ve qué lo decide la base, no esta página.
 // ════════════════════════════════════════════════════════════════════
@@ -418,7 +455,7 @@ async function arrancar() {
 function mostrarLogin(msg) {
   yo = null; usuarios = null; catalogo = null;
   $('buscar-programa').value = ''; $('u-buscar').value = ''; $('u-filtro').value = ''; $('b-buscar').value = ''; bitacora = null;
-  $('app').hidden = true; $('login').hidden = false; cerrarFicha(true);
+  $('app').hidden = true; $('login').hidden = false; cerrarFicha(true); cerrarDialogo();
   const e = $('login-err');
   if (msg) { e.textContent = msg; e.hidden = false; } else e.hidden = true;
   setTimeout(() => $('l-email').focus(), 50);
@@ -802,7 +839,10 @@ function abrirFicha(id) {
       </div>
       <button class="f-cerrar" onclick="cerrarFicha()" aria-label="Cerrar">✕</button>
     </div>
-    <div class="f-cuerpo">${PROGRAMAS.map(k => {
+    <div class="f-acciones-cuenta">${accionesCuenta(u)}</div>
+    <div id="f-panel" hidden></div>
+    ${u.suspendido ? '<div class="f-suspendida">⏸️ Cuenta suspendida: no puede entrar a ningún programa. Para cambiar sus accesos, primero reactívala.</div>' : ''}
+    <div class="f-cuerpo${u.suspendido ? ' bloqueado' : ''}">${PROGRAMAS.map(k => {
       const color = (programas.find(p => p.clave === k) || {}).color || '#0039b3';
       return `<div class="f-prog" data-prog="${k}" style="--pc:${esc(color)}">${htmlPrograma(k)}</div>`; }).join('')}</div>
     <div class="f-historial"><div class="f-hist-titulo">Historial de cambios</div><div id="f-historial">Cargando…</div></div>`;
@@ -814,7 +854,11 @@ function cerrarFicha(forzar) {
   if (!forzar && fichaAbierta && PROGRAMAS.some(hayCambios) && !confirm('Tienes cambios sin guardar. ¿Cerrar de todos modos?')) return;
   fichaAbierta = null; $('ficha-fondo').hidden = true;
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && fichaAbierta) cerrarFicha(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('dialogo-fondo').hidden) return cerrarDialogo();
+  if (fichaAbierta) cerrarFicha();
+});
 
 // Cambios en los controles de la ficha
 $('ficha').addEventListener('change', ev => {
@@ -947,6 +991,324 @@ function pintarBitacora() {
         <div><div class="h-que"><b>${esc(h.persona || h.persona_correo || '—')}</b> · ${esc(h.descripcion)}</div>
         <div class="h-meta">por ${esc(h.actor || h.actor_correo || '—')}</div></div></div>`).join('')
     : `<div class="f-val" style="padding:20px;color:#8994a6">${bitacora.length ? 'Nada coincide con la búsqueda.' : 'Todavía no hay cambios hechos desde el Portal.'}</div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  Fase 3b: las cuentas (crear, contraseñas, suspender, eliminar,
+//  administradores generales, nombre, cargo y foto, «Mi perfil»).
+//  Lo que necesita la llave de servicio lo hace la función «portal-usuarios».
+// ════════════════════════════════════════════════════════════════════
+const MENSAJES = {
+  no_autorizado: 'Tu cuenta no tiene permiso para esto.',
+  correo_invalido: 'Ese correo no es válido.',
+  correo_existe: 'Ya existe una cuenta con ese correo.',
+  nombre_vacio: 'Escribe el nombre.',
+  contrasena_corta: 'La contraseña debe tener al menos 8 caracteres.',
+  contrasena_debil: 'Esa contraseña no la acepta Supabase: usa una más larga, con letras y números.',
+  foto_invalida: 'Ese archivo no es una imagen.',
+  foto_muy_grande: 'La foto es muy pesada.',
+  no_a_si_mismo: 'Eso no te lo puedes hacer a ti mismo.',
+  es_admin_general: 'Es administrador general: primero quítale ese rol.',
+  ultimo_admin_general: 'El Portal no puede quedarse sin administradores generales.',
+  esta_suspendido: 'La cuenta está suspendida: primero reactívala.',
+  no_suspendido: 'La cuenta no está suspendida.',
+  confirmacion_incorrecta: 'El correo que escribiste no coincide.',
+  tiene_registros: 'No se puede eliminar: tiene documentos u otros registros a su nombre. Mejor suspéndela.',
+  sin_correo: 'Esa cuenta no tiene correo.',
+  no_se_pudo_enviar: 'No se pudo enviar el correo. Supabase limita cuántos correos se envían por hora; intenta más tarde.',
+  usuario_no_existe: 'Esa cuenta ya no existe.'
+};
+function textoError(r) {
+  const codigo = String(r?.error || '');
+  if (codigo.includes('ultimo_admin') && !codigo.includes('general'))
+    return `No se puede: ${NOMBRE_PROG[r?.detalle] || 'un programa'} quedaría sin ningún administrador. Nombra primero a otro.`;
+  for (const [k, v] of Object.entries(MENSAJES)) if (codigo.includes(k)) return v;
+  return 'No se pudo: ' + (r?.mensaje || codigo || 'error desconocido');
+}
+async function llamarFuncion(cuerpo) {
+  const { data, error } = await sb.functions.invoke('portal-usuarios', { body: cuerpo });
+  if (!error) return data || { ok: false, error: 'sin_respuesta' };
+  try { const d = await error.context.json(); if (d) return d; } catch (e) { /* sin cuerpo */ }
+  return { ok: false, error: error.message || 'error' };
+}
+async function conCarga(fn) { cargando(true); try { return await fn(); } finally { cargando(false); } }
+function generarClave() {
+  const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const a = new Uint32Array(10); crypto.getRandomValues(a);
+  return Array.from(a, n => letras[n % letras.length]).join('');
+}
+function campoClave(id) {
+  return `<div class="clave-caja"><input id="${id}" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+    <button type="button" class="f-mini" onclick="const i=$('${id}');i.value=generarClave();i.type='text'">Generar</button>
+    <button type="button" class="f-mini" onclick="const i=$('${id}');i.type=i.type==='password'?'text':'password'">Ver</button></div>`;
+}
+// La foto se achica a 400 px antes de subirla.
+function prepararFoto(archivo) {
+  return new Promise((ok, mal) => {
+    if (!archivo || !/^image\//.test(archivo.type)) return mal(new Error('Ese archivo no es una imagen.'));
+    const url = URL.createObjectURL(archivo), img = new Image();
+    img.onload = () => {
+      const escala = Math.min(1, 400 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * escala); c.height = Math.round(img.height * escala);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      ok(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); mal(new Error('No se pudo leer la imagen.')); };
+    img.src = url;
+  });
+}
+function abrirDialogo(html) { $('dialogo').innerHTML = html; $('dialogo-fondo').hidden = false; }
+function cerrarDialogo() { $('dialogo-fondo').hidden = true; $('dialogo').innerHTML = ''; }
+async function recargarUsuarios(abrirId) {
+  usuarios = null;
+  await cargarUsuarios();
+  if (!$('vista-usuarios').hidden) pintarUsuarios();
+  if (abrirId && (usuarios || []).some(u => u.id === abrirId)) abrirFicha(abrirId);
+}
+
+// ── Acciones de la cuenta, en la ficha ──────────────────────────────
+function accionesCuenta(u) {
+  const propio = u.id === yo.id;
+  let h = `<button type="button" class="f-acc" data-cuenta="datos">✏️ Nombre, cargo y foto</button>
+           <button type="button" class="f-acc" data-cuenta="clave">🔑 Contraseña</button>`;
+  if (!propio) h += u.suspendido ? `<button type="button" class="f-acc" data-cuenta="reactivar">▶️ Reactivar</button>`
+                                 : `<button type="button" class="f-acc" data-cuenta="suspender">⏸️ Suspender</button>`;
+  if (u.es_admin) h += `<button type="button" class="f-acc" data-cuenta="quitar-admin">🛡️ Quitar administrador general</button>`;
+  else if (!u.suspendido) h += `<button type="button" class="f-acc" data-cuenta="hacer-admin">🛡️ Hacer administrador general</button>`;
+  if (!propio && !u.es_admin) h += `<button type="button" class="f-acc peligro" data-cuenta="eliminar">🗑️ Eliminar cuenta</button>`;
+  return h;
+}
+function fotoGrande(p, id) {
+  return `<div class="foto-grande" id="${id}">${p.foto_url ? `<img src="${esc(p.foto_url)}" alt="">` : esc(iniciales(p.nombre))}</div>`;
+}
+function panelDatos(u) {
+  return `<div class="p-titulo">Nombre, cargo y foto</div>
+    <div class="p-fila" style="align-items:center">${fotoGrande(u, 'p-foto')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <label class="f-mini" style="cursor:pointer">Cambiar foto<input type="file" accept="image/*" hidden data-panel="foto"></label>
+        ${u.foto_url ? '<button type="button" class="f-mini" data-panel="quitar-foto">Quitar foto</button>' : ''}</div></div>
+    <div class="p-fila">
+      <div class="p-campo"><label for="p-nombre">Nombre completo</label><input id="p-nombre" value="${esc(u.nombre)}"></div>
+      <div class="p-campo"><label for="p-cargo">Cargo</label><input id="p-cargo" value="${esc(u.cargo || '')}"></div></div>
+    <div class="p-nota">Se cambia en todos los programas a la vez.</div>
+    <div class="d-pie"><button type="button" class="f-btn" data-panel="guardar-datos">Guardar</button></div>`;
+}
+function panelClave(u) {
+  return `<div class="p-titulo">Contraseña de ${esc(primerNombre(u.nombre))}</div>
+    <div class="p-fila"><div class="p-campo"><label for="p-clave">Contraseña nueva</label>${campoClave('p-clave')}</div>
+      <button type="button" class="f-btn" data-panel="guardar-clave">Guardar contraseña</button></div>
+    <div class="p-nota">Sirve para entrar a todos los programas. Después díselo tú a la persona.</div>
+    <div class="p-fila" style="margin-top:12px"><button type="button" class="f-mini" data-panel="enviar-correo">📧 O enviarle un correo para que ella misma la cambie</button></div>`;
+}
+function panelEliminar(u) {
+  return `<div class="p-titulo">Eliminar la cuenta</div>
+    <div class="p-peligro">Se borra la cuenta de ${esc(u.nombre)} y todos sus accesos, para siempre. Si tiene documentos
+      u otros registros a su nombre, no se podrá: en ese caso, mejor suspéndela.</div>
+    <div class="p-fila"><div class="p-campo"><label for="p-confirmar">Para confirmar, escribe su correo: <b>${esc(u.correo)}</b></label>
+      <input id="p-confirmar" autocomplete="off"></div>
+      <button type="button" class="f-btn peligro" data-panel="eliminar">Eliminar para siempre</button></div>`;
+}
+
+async function accionCuenta(accion) {
+  const u = usuarioAbierto();
+  if (!u) return;
+  const panel = $('f-panel');
+  if (['datos', 'clave', 'eliminar'].includes(accion)) {
+    const cerrar = panel.dataset.abierto === accion;
+    document.querySelectorAll('#ficha [data-cuenta]').forEach(b => b.classList.toggle('activa', !cerrar && b.dataset.cuenta === accion));
+    if (cerrar) { panel.hidden = true; panel.dataset.abierto = ''; return; }
+    panel.innerHTML = accion === 'datos' ? panelDatos(u) : accion === 'clave' ? panelClave(u) : panelEliminar(u);
+    panel.hidden = false; panel.dataset.abierto = accion;
+    return;
+  }
+  if (accion === 'suspender') {
+    if (!confirm(`¿Suspender a ${u.nombre}?\n\nSale de todos los programas al instante y no puede volver a entrar.\nAl reactivarla recupera exactamente los accesos que tenía.`)) return;
+    const r = await conCarga(() => llamarFuncion({ accion: 'suspender', usuario: u.id }));
+    if (!r.ok) return aviso(textoError(r), true);
+    aviso(`${primerNombre(u.nombre)} quedó suspendida en todos los programas.`);
+    if (r.aviso) setTimeout(() => aviso(r.aviso, true), 1500);
+    return recargarUsuarios(u.id);
+  }
+  if (accion === 'reactivar') {
+    if (!confirm(`¿Reactivar a ${u.nombre}? Vuelve a entrar con los mismos accesos que tenía.`)) return;
+    const r = await conCarga(() => llamarFuncion({ accion: 'reactivar', usuario: u.id }));
+    if (!r.ok) return aviso(textoError(r), true);
+    aviso(`${primerNombre(u.nombre)} quedó activa otra vez.`);
+    return recargarUsuarios(u.id);
+  }
+  if (accion === 'hacer-admin' || accion === 'quitar-admin') {
+    const si = accion === 'hacer-admin';
+    const pregunta = si ? `¿Hacer a ${u.nombre} administrador general?\n\nPodrá ver y cambiar los accesos de todas las personas en todos los programas.`
+      : u.id === yo.id ? '¿Quitarte a ti mismo el rol de administrador general?\n\nDejarás de ver «Usuarios y accesos».'
+      : `¿Quitarle a ${u.nombre} el rol de administrador general?`;
+    if (!confirm(pregunta)) return;
+    const { error } = await conCarga(() => sb.rpc('portal_nombrar_admin', { p_usuario: u.id, p_admin: si }));
+    if (error) return aviso(textoError({ error: error.message, detalle: error.details }), true);
+    aviso(si ? 'Listo: ahora es administrador general.' : 'Listo: ya no es administrador general.');
+    if (u.id === yo.id && !si) { cerrarFicha(true); await refrescarMisProgramas(); return irA(''); }
+    return recargarUsuarios(u.id);
+  }
+}
+
+async function accionPanel(accion) {
+  const u = usuarioAbierto();
+  if (!u) return;
+  if (accion === 'guardar-datos') {
+    const r = await conCarga(() => llamarFuncion({ accion: 'datos', usuario: u.id, nombre: $('p-nombre').value, cargo: $('p-cargo').value }));
+    if (!r.ok) return aviso(textoError(r), true);
+    aviso('Nombre y cargo guardados en todos los programas.');
+    if (u.id === yo.id) refrescarMisProgramas();
+    return recargarUsuarios(u.id);
+  }
+  if (accion === 'quitar-foto') {
+    const r = await conCarga(() => llamarFuncion({ accion: 'quitar_foto', usuario: u.id }));
+    if (!r.ok) return aviso(textoError(r), true);
+    aviso('Foto quitada.');
+    if (u.id === yo.id) refrescarMisProgramas();
+    return recargarUsuarios(u.id);
+  }
+  if (accion === 'guardar-clave') {
+    const clave = $('p-clave').value;
+    if (clave.length < 8) return aviso(MENSAJES.contrasena_corta, true);
+    const r = await conCarga(() => llamarFuncion({ accion: 'contrasena', usuario: u.id, contrasena: clave }));
+    if (!r.ok) return aviso(textoError(r), true);
+    $('p-clave').value = '';
+    return aviso(`Contraseña guardada. Díselo a ${primerNombre(u.nombre)}.`);
+  }
+  if (accion === 'enviar-correo') {
+    if (!confirm(`¿Enviarle a ${u.correo} un correo para que cambie su contraseña?`)) return;
+    const r = await conCarga(() => llamarFuncion({ accion: 'recuperacion', usuario: u.id }));
+    if (!r.ok) return aviso(textoError(r), true);
+    return aviso('Correo enviado.');
+  }
+  if (accion === 'eliminar') {
+    const r = await conCarga(() => llamarFuncion({ accion: 'eliminar', usuario: u.id, confirmacion: $('p-confirmar').value }));
+    if (!r.ok) return aviso(textoError(r), true);
+    aviso(`La cuenta de ${u.nombre} fue eliminada.`);
+    cerrarFicha(true);
+    return recargarUsuarios();
+  }
+}
+async function fotoDeOtro(input) {
+  const u = usuarioAbierto();
+  if (!u || !input.files[0]) return;
+  try {
+    const imagen = await prepararFoto(input.files[0]);
+    const r = await conCarga(() => llamarFuncion({ accion: 'foto', usuario: u.id, imagen }));
+    if (!r.ok) return aviso(textoError(r), true);
+    aviso('Foto cambiada en todos los programas.');
+    if (u.id === yo.id) refrescarMisProgramas();
+    recargarUsuarios(u.id);
+  } catch (e) { aviso(e.message, true); }
+}
+$('ficha').addEventListener('click', ev => {
+  const c = ev.target.closest('button[data-cuenta]');
+  if (c) return accionCuenta(c.dataset.cuenta);
+  const p = ev.target.closest('button[data-panel]');
+  if (p) return accionPanel(p.dataset.panel);
+});
+$('ficha').addEventListener('change', ev => { if (ev.target.matches('input[data-panel="foto"]')) fotoDeOtro(ev.target); });
+
+// ── Nuevo usuario ───────────────────────────────────────────────────
+function abrirNuevoUsuario() {
+  abrirDialogo(`<div class="d-caja">
+    <div class="d-titulo">Nuevo usuario</div>
+    <div class="d-sub">La cuenta nace sin acceso a ningún programa. Después de crearla le das sus accesos en su ficha.</div>
+    <div class="p-campo" style="margin-bottom:10px"><label for="nu-nombre">Nombre completo</label><input id="nu-nombre" autocomplete="off"></div>
+    <div class="p-campo" style="margin-bottom:10px"><label for="nu-correo">Correo</label><input id="nu-correo" type="email" autocomplete="off"></div>
+    <div class="p-campo" style="margin-bottom:10px"><label for="nu-cargo">Cargo (opcional)</label><input id="nu-cargo" autocomplete="off"></div>
+    <div class="p-campo"><label for="nu-clave">Contraseña</label>${campoClave('nu-clave')}</div>
+    <div class="p-nota">Mínimo 8 caracteres. Anótala para dársela a la persona.</div>
+    <div class="login-err" id="nu-error" hidden style="margin-top:10px"></div>
+    <div class="d-pie"><button type="button" class="f-btn f-btn-sec" onclick="cerrarDialogo()">Cancelar</button>
+      <button type="button" class="f-btn" id="nu-crear" onclick="crearUsuario()">Crear cuenta</button></div></div>`);
+  setTimeout(() => $('nu-nombre').focus(), 50);
+}
+async function crearUsuario() {
+  const nombre = $('nu-nombre').value.trim(), correo = $('nu-correo').value.trim(), cargo = $('nu-cargo').value.trim(), contrasena = $('nu-clave').value;
+  const err = $('nu-error');
+  const mal = m => { err.textContent = m; err.hidden = false; };
+  err.hidden = true;
+  if (!nombre) return mal(MENSAJES.nombre_vacio);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return mal(MENSAJES.correo_invalido);
+  if (contrasena.length < 8) return mal(MENSAJES.contrasena_corta);
+  const b = $('nu-crear'); b.disabled = true; b.textContent = 'Creando…';
+  const r = await llamarFuncion({ accion: 'crear', nombre, correo, cargo, contrasena });
+  b.disabled = false; b.textContent = 'Crear cuenta';
+  if (!r.ok) return mal(textoError(r));
+  $('dialogo').innerHTML = `<div class="d-caja"><div class="d-titulo">Cuenta creada</div>
+    <div class="d-exito">Correo: <code>${esc(correo)}</code><br>Contraseña: <code>${esc(contrasena)}</code></div>
+    <div class="d-sub">Dale estos datos a ${esc(primerNombre(nombre))}. Por ahora no tiene acceso a ningún programa.</div>
+    <div class="d-pie"><button type="button" class="f-btn f-btn-sec" onclick="cerrarDialogo()">Cerrar</button>
+      <button type="button" class="f-btn" onclick="cerrarDialogo();recargarUsuarios('${esc(r.usuario)}')">Darle accesos →</button></div></div>`;
+  recargarUsuarios();
+}
+
+// ── Mi perfil (para todas las personas) ─────────────────────────────
+function abrirMiPerfil() {
+  if (!yo) return;
+  abrirDialogo(`<div class="d-caja">
+    <div class="d-titulo">Mi perfil</div>
+    <div class="d-sub">${esc(yo.correo)} · Tu nombre y tu foto se ven igual en todos los programas.</div>
+    <div class="p-fila" style="align-items:center">${fotoGrande(yo, 'mp-foto')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <label class="f-mini" style="cursor:pointer">Cambiar foto<input type="file" accept="image/*" hidden onchange="miFoto(this)"></label>
+        ${yo.foto_url ? '<button type="button" class="f-mini" onclick="miQuitarFoto()">Quitar foto</button>' : ''}</div></div>
+    <div class="p-fila">
+      <div class="p-campo"><label for="mp-nombre">Nombre completo</label><input id="mp-nombre" value="${esc(yo.nombre)}"></div>
+      <div class="p-campo"><label for="mp-cargo">Cargo</label><input id="mp-cargo" value="${esc(yo.cargo || '')}"></div></div>
+    <div class="d-pie" style="margin-top:0"><button type="button" class="f-btn" onclick="miDatos()">Guardar nombre y cargo</button></div>
+    <div class="f-hist-titulo" style="margin-top:18px">Cambiar mi contraseña</div>
+    <div class="p-fila">
+      <div class="p-campo"><label for="mp-clave">Contraseña nueva</label>${campoClave('mp-clave')}</div>
+      <div class="p-campo"><label for="mp-clave2">Repítela</label><input id="mp-clave2" type="password" autocomplete="new-password"></div></div>
+    <div class="p-nota">Es la misma para entrar a todos los programas.</div>
+    <div class="login-err" id="mp-error" hidden style="margin-top:10px"></div>
+    <div class="d-pie"><button type="button" class="f-btn f-btn-sec" onclick="cerrarDialogo()">Cerrar</button>
+      <button type="button" class="f-btn" onclick="miClave()">Cambiar contraseña</button></div></div>`);
+}
+async function trasCambiarMiPerfil(mensaje) {
+  aviso(mensaje);
+  await refrescarMisProgramas();
+  if (usuarios) recargarUsuarios();
+  abrirMiPerfil();
+}
+async function miDatos() {
+  const r = await conCarga(() => llamarFuncion({ accion: 'datos', usuario: yo.id, nombre: $('mp-nombre').value, cargo: $('mp-cargo').value }));
+  if (!r.ok) return aviso(textoError(r), true);
+  trasCambiarMiPerfil('Nombre y cargo guardados.');
+}
+async function miFoto(input) {
+  if (!input.files[0]) return;
+  try {
+    const imagen = await prepararFoto(input.files[0]);
+    const r = await conCarga(() => llamarFuncion({ accion: 'foto', usuario: yo.id, imagen }));
+    if (!r.ok) return aviso(textoError(r), true);
+    trasCambiarMiPerfil('Foto cambiada.');
+  } catch (e) { aviso(e.message, true); }
+}
+async function miQuitarFoto() {
+  const r = await conCarga(() => llamarFuncion({ accion: 'quitar_foto', usuario: yo.id }));
+  if (!r.ok) return aviso(textoError(r), true);
+  trasCambiarMiPerfil('Foto quitada.');
+}
+async function miClave() {
+  const a = $('mp-clave').value, b = $('mp-clave2').value, err = $('mp-error');
+  const mal = m => { err.textContent = m; err.hidden = false; };
+  err.hidden = true;
+  if (a.length < 8) return mal(MENSAJES.contrasena_corta);
+  if (a !== b) return mal('Las dos contraseñas no coinciden.');
+  const { error } = await conCarga(() => sb.auth.updateUser({ password: a }));
+  if (error) {
+    const m = String(error.message || '');
+    return mal(/same|different/i.test(m) ? 'Es igual a la contraseña que ya tienes.'
+      : /weak|least|short|characters/i.test(m) ? 'Esa contraseña es muy débil: usa una más larga, con letras y números.'
+      : 'No se pudo cambiar: ' + m);
+  }
+  $('mp-clave').value = ''; $('mp-clave2').value = '';
+  aviso('Contraseña cambiada. Úsala desde ahora en todos los programas.');
 }
 
 arrancar();

@@ -214,6 +214,23 @@ button.ws-stat{cursor:pointer}
 .d-exito{background:var(--green-light);color:var(--green-dark);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.8;margin-bottom:12px}
 .d-exito code{background:#fff;border-radius:6px;padding:2px 8px;font-size:13.5px;color:#12213b;user-select:all}
 
+/* PREGUNTA (en vez de la ventana del navegador) */
+.pregunta-fondo{z-index:55;background:rgba(10,20,50,.5);backdrop-filter:blur(2px)}
+.modal.pregunta{width:440px;margin:auto 0;padding:28px 26px 22px;text-align:center;animation:prEntra .18s ease}
+@keyframes prEntra{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.pr-icono{width:60px;height:60px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:27px;background:var(--navy-light)}
+.pr-titulo{font-size:18px;font-weight:800;color:#12213b;line-height:1.35}
+.pr-texto{font-size:13.5px;color:var(--ws-muted);line-height:1.6;margin-top:8px}
+.pr-pie{display:flex;gap:10px;margin-top:22px}
+.pr-pie .f-btn{flex:1 1 0;min-width:max-content;padding:11px 14px;font-size:13.5px}
+.pregunta.aviso .pr-icono{background:var(--amber-light)}
+.pregunta.peligro .pr-icono{background:var(--red-light)}
+.pregunta.peligro [data-si]{background:var(--red)}
+.pregunta.bien .pr-icono{background:var(--green-light)}
+.pregunta.bien [data-si]{background:var(--green-dark)}
+.pr-pie .f-btn:focus-visible{outline:3px solid rgba(0,51,153,.28);outline-offset:2px}
+@media(max-width:480px){.pr-pie{flex-direction:column-reverse}.pr-pie .f-btn{flex:none;min-width:0;white-space:normal}}
+
 /* AVISO */
 #aviso{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;background:#12213b;color:#fff;font-size:13px;font-weight:700;padding:12px 18px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,30,.3);max-width:90vw}
 #aviso.error{background:var(--red)}
@@ -336,6 +353,9 @@ button.ws-stat{cursor:pointer}
 <div class="modal-fondo" id="dialogo-fondo" hidden style="z-index:45" onclick="if(event.target===this)cerrarDialogo()">
   <div class="modal" id="dialogo" role="dialog" aria-modal="true" style="width:580px"></div>
 </div>
+<div class="modal-fondo pregunta-fondo" id="pregunta-fondo" hidden onclick="if(event.target===this)responderPregunta(false)">
+  <div class="modal pregunta" id="pregunta" role="alertdialog" aria-modal="true" aria-labelledby="pr-titulo"></div>
+</div>
 <div id="aviso" hidden></div>
 <div id="cargando" hidden>Cargando…</div>
 
@@ -400,6 +420,38 @@ function aviso(txt, error) {
   clearTimeout(aviso._t); aviso._t = setTimeout(() => { a.hidden = true; }, error ? 6000 : 3500);
 }
 function cargando(si) { $('cargando').hidden = !si; }
+
+// Pregunta con el estilo del Portal, en vez de la ventana del navegador.
+// preguntar({ titulo, texto, si, no, icono, tono }) → promesa con true o false.
+// texto: una frase o una lista de frases. tono: '' azul, 'aviso' ámbar, 'peligro' rojo, 'bien' verde.
+let preguntaAbierta = null;
+function preguntar({ titulo, texto = '', si = 'Aceptar', no = 'Cancelar', icono = '❔', tono = '' }) {
+  responderPregunta(false);
+  const caja = $('pregunta');
+  caja.className = 'modal pregunta' + (tono ? ' ' + tono : '');
+  caja.innerHTML = `<div class="pr-icono" aria-hidden="true">${icono}</div>
+    <div class="pr-titulo" id="pr-titulo">${esc(titulo)}</div>
+    ${[].concat(texto).filter(Boolean).map(t => `<p class="pr-texto">${esc(t)}</p>`).join('')}
+    <div class="pr-pie"><button type="button" class="f-btn f-btn-sec" data-no>${esc(no)}</button>
+      <button type="button" class="f-btn" data-si>${esc(si)}</button></div>`;
+  $('pregunta-fondo').hidden = false;
+  return new Promise(ok => {
+    preguntaAbierta = { ok, antes: document.activeElement };
+    caja.querySelector(tono === 'peligro' ? '[data-no]' : '[data-si]').focus();
+  });
+}
+function responderPregunta(si) {
+  const p = preguntaAbierta;
+  if (!p) return;
+  preguntaAbierta = null;
+  $('pregunta-fondo').hidden = true; $('pregunta').innerHTML = '';
+  if (p.antes && document.body.contains(p.antes)) p.antes.focus({ preventScroll: true });
+  p.ok(si);
+}
+$('pregunta').addEventListener('click', ev => {
+  if (ev.target.closest('[data-si]')) responderPregunta(true);
+  else if (ev.target.closest('[data-no]')) responderPregunta(false);
+});
 function lista(arr, mapa) { return (arr || []).map(k => (mapa && mapa[k]) || k); }
 
 // Resumen del acceso de una persona en un programa: { estado: si|no|ojo, texto, detalle }
@@ -455,7 +507,7 @@ async function arrancar() {
 function mostrarLogin(msg) {
   yo = null; usuarios = null; catalogo = null;
   $('buscar-programa').value = ''; $('u-buscar').value = ''; $('u-filtro').value = ''; $('b-buscar').value = ''; bitacora = null;
-  $('app').hidden = true; $('login').hidden = false; cerrarFicha(true); cerrarDialogo();
+  $('app').hidden = true; $('login').hidden = false; responderPregunta(false); cerrarFicha(true); cerrarDialogo();
   const e = $('login-err');
   if (msg) { e.textContent = msg; e.hidden = false; } else e.hidden = true;
   setTimeout(() => $('l-email').focus(), 50);
@@ -850,11 +902,24 @@ function abrirFicha(id) {
   cargarHistorial(id);
 }
 
-function cerrarFicha(forzar) {
-  if (!forzar && fichaAbierta && PROGRAMAS.some(hayCambios) && !confirm('Tienes cambios sin guardar. ¿Cerrar de todos modos?')) return;
+async function cerrarFicha(forzar) {
+  if (!forzar && fichaAbierta && PROGRAMAS.some(hayCambios)) {
+    const cuales = PROGRAMAS.filter(hayCambios).map(k => NOMBRE_PROG[k]).join(', ');
+    if (!await preguntar({ icono: '📝', tono: 'aviso', titulo: 'Tienes cambios sin guardar',
+          texto: `Hay cambios sin guardar en ${cuales}. Si cierras la ficha, se pierden.`,
+          si: 'Cerrar sin guardar', no: 'Seguir editando' })) return;
+  }
   fichaAbierta = null; $('ficha-fondo').hidden = true;
 }
 document.addEventListener('keydown', e => {
+  if (preguntaAbierta) {                       // la pregunta manda: Esc la cierra y el foco no se sale de ella
+    if (e.key === 'Escape') { e.preventDefault(); responderPregunta(false); }
+    if (e.key === 'Tab') {
+      const bs = [...$('pregunta').querySelectorAll('button')], i = bs.indexOf(document.activeElement);
+      e.preventDefault(); bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
+    }
+    return;
+  }
   if (e.key !== 'Escape') return;
   if (!$('dialogo-fondo').hidden) return cerrarDialogo();
   if (fichaAbierta) cerrarFicha();
@@ -930,11 +995,14 @@ async function guardarPrograma(k) {
   if (!u || !hayCambios(k)) return;
   const b = borradores[k], o = originales[k], nom = NOMBRE_PROG[k];
   if (b.rol === 'sin_acceso' && o.rol !== 'sin_acceso'
-      && !confirm(`¿Quitarle a ${u.nombre} el acceso a ${nom}?`)) return;
+      && !await preguntar({ icono: '🚫', tono: 'peligro', titulo: `¿Quitarle a ${u.nombre} el acceso a ${nom}?`,
+                           texto: `Ya no podrá entrar a ${nom}. Se lo puedes volver a dar cuando quieras.`, si: 'Sí, quitar el acceso' })) return;
   if (k === 'rh' && b.rol === 'admin' && o.rol !== 'admin'
-      && !confirm(`Como administrador de RH, ${u.nombre} verá todos los datos de salud (Seguimientos médicos). ¿Continuar?`)) return;
+      && !await preguntar({ icono: '🩺', tono: 'aviso', titulo: `¿Hacer a ${u.nombre} administrador de RH?`,
+                           texto: 'Como administrador de RH verá todos los datos de salud (Seguimientos médicos).', si: 'Sí, continuar' })) return;
   if (u.id === yo.id && esAdminEn(k, o) && !esAdminEn(k, b)
-      && !confirm(`Te vas a quitar a ti mismo el rol de administrador en ${nom}. ¿Continuar?`)) return;
+      && !await preguntar({ icono: '⚠️', tono: 'aviso', titulo: `¿Quitarte el rol de administrador en ${nom}?`,
+                           texto: 'Te lo vas a quitar a ti mismo. Como administrador general, te lo puedes volver a dar desde aquí.', si: 'Sí, quitármelo' })) return;
   const boton = document.querySelector(`#ficha [data-prog="${k}"] [data-accion="guardar"]`);
   if (boton) { boton.disabled = true; boton.textContent = 'Guardando…'; }
   const { data, error } = await sb.rpc('portal_guardar_acceso', { p_usuario: u.id, p_programa: k, p_acceso: carga(k, b) });
@@ -1124,7 +1192,9 @@ async function accionCuenta(accion) {
     return;
   }
   if (accion === 'suspender') {
-    if (!confirm(`¿Suspender a ${u.nombre}?\n\nSale de todos los programas al instante y no puede volver a entrar.\nAl reactivarla recupera exactamente los accesos que tenía.`)) return;
+    if (!await preguntar({ icono: '⏸️', tono: 'peligro', titulo: `¿Suspender a ${u.nombre}?`,
+          texto: ['Sale de todos los programas al instante y no puede volver a entrar.',
+                  'Al reactivarla recupera exactamente los accesos que tenía.'], si: 'Sí, suspender' })) return;
     const r = await conCarga(() => llamarFuncion({ accion: 'suspender', usuario: u.id }));
     if (!r.ok) return aviso(textoError(r), true);
     aviso(`${primerNombre(u.nombre)} quedó suspendida en todos los programas.`);
@@ -1132,7 +1202,8 @@ async function accionCuenta(accion) {
     return recargarUsuarios(u.id);
   }
   if (accion === 'reactivar') {
-    if (!confirm(`¿Reactivar a ${u.nombre}? Vuelve a entrar con los mismos accesos que tenía.`)) return;
+    if (!await preguntar({ icono: '▶️', tono: 'bien', titulo: `¿Reactivar a ${u.nombre}?`,
+          texto: 'Vuelve a entrar con los mismos accesos que tenía.', si: 'Sí, reactivar' })) return;
     const r = await conCarga(() => llamarFuncion({ accion: 'reactivar', usuario: u.id }));
     if (!r.ok) return aviso(textoError(r), true);
     aviso(`${primerNombre(u.nombre)} quedó activa otra vez.`);
@@ -1140,10 +1211,15 @@ async function accionCuenta(accion) {
   }
   if (accion === 'hacer-admin' || accion === 'quitar-admin') {
     const si = accion === 'hacer-admin';
-    const pregunta = si ? `¿Hacer a ${u.nombre} administrador general?\n\nPodrá ver y cambiar los accesos de todas las personas en todos los programas.`
-      : u.id === yo.id ? '¿Quitarte a ti mismo el rol de administrador general?\n\nDejarás de ver «Usuarios y accesos».'
-      : `¿Quitarle a ${u.nombre} el rol de administrador general?`;
-    if (!confirm(pregunta)) return;
+    const pregunta = si
+      ? { icono: '🛡️', titulo: `¿Hacer a ${u.nombre} administrador general?`,
+          texto: 'Podrá ver y cambiar los accesos de todas las personas en todos los programas.', si: 'Sí, hacerlo administrador' }
+      : u.id === yo.id
+      ? { icono: '🛡️', tono: 'peligro', titulo: '¿Quitarte el rol de administrador general?',
+          texto: 'Dejarás de ver «Usuarios y accesos». Solo otro administrador general te lo puede devolver.', si: 'Sí, quitármelo' }
+      : { icono: '🛡️', tono: 'aviso', titulo: `¿Quitarle a ${u.nombre} el rol de administrador general?`,
+          texto: 'Dejará de ver «Usuarios y accesos». Sus accesos a cada programa no cambian.', si: 'Sí, quitárselo' };
+    if (!await preguntar(pregunta)) return;
     const { error } = await conCarga(() => sb.rpc('portal_nombrar_admin', { p_usuario: u.id, p_admin: si }));
     if (error) return aviso(textoError({ error: error.message, detalle: error.details }), true);
     aviso(si ? 'Listo: ahora es administrador general.' : 'Listo: ya no es administrador general.');
@@ -1178,7 +1254,8 @@ async function accionPanel(accion) {
     return aviso(`Contraseña guardada. Díselo a ${primerNombre(u.nombre)}.`);
   }
   if (accion === 'enviar-correo') {
-    if (!confirm(`¿Enviarle a ${u.correo} un correo para que cambie su contraseña?`)) return;
+    if (!await preguntar({ icono: '📧', titulo: '¿Enviarle el correo para cambiar la contraseña?',
+          texto: `Le llega a ${u.correo} un enlace para que escriba una contraseña nueva.`, si: 'Sí, enviar' })) return;
     const r = await conCarga(() => llamarFuncion({ accion: 'recuperacion', usuario: u.id }));
     if (!r.ok) return aviso(textoError(r), true);
     return aviso('Correo enviado.');

@@ -190,6 +190,59 @@ button.ws-stat{cursor:pointer}
 .s-bloq .s-op{cursor:default;pointer-events:none}
 .s-bloq .s-op:not(.activa){opacity:.4}
 .c-act{font-size:11px;color:var(--ws-muted);white-space:nowrap}
+.f-fila-rol{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.f-info{border:none;background:none;color:var(--navy);font-size:12px;font-weight:700;cursor:pointer;padding:0;margin-top:10px;font-family:var(--font);white-space:nowrap}
+.f-info:hover{text-decoration:underline}
+.r-panel{margin-top:8px;border:1px solid var(--ws-line);border-radius:12px;background:#fafbfe;padding:6px}
+.r-rol{padding:7px 8px;border-radius:8px}
+.r-rol + .r-rol{margin-top:2px}
+.r-rol.actual{background:var(--navy-light)}
+.r-nom{font-size:12.5px;font-weight:800;color:#12213b;display:flex;align-items:center;gap:6px}
+.r-tag{font-size:10.5px;font-weight:800;color:var(--navy);background:#fff;border-radius:6px;padding:1px 6px}
+.r-txt{font-size:12px;color:#4a5568;line-height:1.4;margin-top:2px}
+.r-nota{font-size:11.5px;color:var(--ws-muted);line-height:1.4;padding:7px 8px 4px;border-top:1px dashed var(--ws-line);margin-top:4px}
+/* FICHA A PANTALLA COMPLETA: programas a la izquierda, el elegido en grande a la derecha */
+#ficha-fondo{padding:0;background:var(--ws-bg);display:block}
+#ficha{width:100%;max-width:none;min-height:100%;border-radius:0;box-shadow:none;background:transparent;animation:none}
+.f-pagina{max-width:1280px;margin:0 auto;padding:14px 24px 40px}
+.f-volver{border:none;background:none;color:var(--navy);font-weight:800;font-size:13.5px;cursor:pointer;padding:6px 0 10px;font-family:var(--font)}
+.f-volver:hover{text-decoration:underline}
+.f-tarjeta{background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(20,40,90,.07);overflow:hidden}
+.f-tarjeta .f-acciones-cuenta{border-bottom:none}
+.f-tarjeta #f-panel{border-bottom:none;border-top:1px solid var(--ws-line)}
+.f-pagina .f-suspendida{margin:16px 0 0}
+.f-zona{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
+.f-nav{position:sticky;top:14px;padding:10px;display:flex;flex-direction:column;gap:3px;overflow:visible}
+.n-item{display:flex;gap:10px;align-items:flex-start;text-align:left;border:none;background:none;border-radius:12px;padding:10px 12px;cursor:pointer;font-family:var(--font);width:100%;color:#12213b}
+.n-item:hover{background:#f4f7fc}
+.n-item.activo{background:var(--navy-light);box-shadow:inset 4px 0 0 var(--pc, var(--navy))}
+.n-hist{margin-top:6px;border-top:1px solid var(--ws-line);border-radius:0 0 12px 12px}
+.n-ico{font-size:17px;line-height:1.3;width:22px;text-align:center;flex-shrink:0}
+.n-txt{display:flex;flex-direction:column;min-width:0;gap:2px}
+.n-nom{font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.n-pend{font-size:10.5px;font-weight:800;color:var(--amber)}
+.n-est{font-size:11.5px;color:var(--ws-muted);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.n-est.n-si{color:var(--navy)}
+.n-est.n-ojo{color:var(--amber)}
+.f-prog-grande{background:#fff;border:none;border-top:5px solid var(--pc);border-radius:18px;padding:20px 26px 0;box-shadow:0 10px 30px rgba(20,40,90,.07)}
+.f-prog-grande .f-prog-nombre{font-size:18px}
+.f-dos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+.f-dos.una{grid-template-columns:minmax(0,560px)}
+.f-prog-grande .f-acciones{position:sticky;bottom:0;background:#fff;margin:20px -26px 0;padding:12px 26px 14px;border-top:1px solid var(--ws-line);border-radius:0 0 18px 18px;z-index:2}
+.f-prog-grande .c-lista{max-height:300px}
+.f-main.bloqueado .f-prog{opacity:.55;pointer-events:none}
+.f-hist-grande{padding:20px 26px}
+.f-hist-grande .h-lista{max-height:none}
+@media(max-width:900px){
+  .f-pagina{padding:10px 12px 30px}
+  .f-zona{grid-template-columns:minmax(0,1fr);gap:12px}
+  .f-nav{position:static;flex-direction:row;overflow-x:auto;padding:6px;gap:4px}
+  .n-item{min-width:150px;width:auto;flex-shrink:0}
+  .n-hist{margin-top:0;border-top:none;border-radius:12px}
+  .f-dos{grid-template-columns:minmax(0,1fr);gap:0}
+  .f-prog-grande{padding:16px 16px 0}
+  .f-prog-grande .f-acciones{margin:16px -16px 0;padding:12px 16px 14px}
+}
 .f-historial{padding:0 26px 24px}
 .f-hist-titulo{font-size:14px;font-weight:800;color:#12213b;margin-bottom:8px}
 .h-lista{border:1px solid var(--ws-line);border-radius:12px;max-height:240px;overflow-y:auto}
@@ -773,6 +826,60 @@ const OPCIONES = {
   academia: [['sin_acceso', 'Sin acceso'], ['viewer', 'Solo lectura'], ['admin', 'Administrador']],
   caja: [['sin_acceso', 'Sin acceso'], ['acceso', 'Con acceso']]
 };
+// Qué hace cada rol, según la página de cada programa (su «Roles y permisos» o sus instrucciones).
+// En RH sale de la plantilla de cada rol (catálogo de la base), así siempre coincide con RH.
+const INFO_ROLES = {
+  documental: {
+    roles: {
+      invitado: ['Ve el contenido de sus áreas.', 'No descarga archivos ni crea, cambia o borra nada.'],
+      viewer: ['Ve y descarga el contenido de sus áreas.', 'Cambia el estado de las tareas que tenga asignadas. No crea, cambia ni borra nada más.'],
+      supervisor: ['Crea documentos, tareas, actas, subcarpetas y archivos en sus áreas.',
+                   'Cambia o borra solo lo que él mismo creó. No ve los documentos ocultos y en el Organigrama solo consulta.'],
+      editor: ['Crea, cambia y borra todo en sus áreas, sin importar quién lo creó.',
+               'Ve los documentos ocultos, maneja el Organigrama y crea carpetas raíz en Ciclo PHVA.'],
+      admin: ['Todo, en todas las áreas.', 'Solo él maneja Recursos y ve el registro de Auditoría.']
+    },
+    nota: 'Las áreas, abajo, dicen en qué partes del panel aplica el rol. En Documentación, solo el responsable de cada carpeta (o un administrador) sube y cambia archivos.'
+  },
+  rh: { nota: 'Las secciones y los contratos de cada persona se ajustan abajo. Seguimientos médicos va aparte, salvo para el administrador.' },
+  firmas: {
+    roles: {
+      visualizador: ['Ve lo de sus módulos y contratos.', 'Nunca crea, cambia ni borra nada.'],
+      editor: ['Crea en sus módulos y contratos, y cambia o borra solo lo que él mismo registró (no listas cerradas ni documentos finalizados).',
+               'En EPP y Dotación registra entregas. El directorio de trabajadores y el catálogo son del administrador, salvo el permiso «catálogo».',
+               'En Inspecciones usa los enlaces ya creados. Los formatos y los enlaces nuevos son del administrador.'],
+      admin: ['Todo, en todos los módulos y contratos.', 'Solo él ve la Auditoría.']
+    },
+    nota: 'Los módulos y contratos de cada persona se eligen abajo.'
+  },
+  academia: {
+    roles: {
+      viewer: ['Ve las inducciones, reinducciones y certificados, y los exporta.', 'No cambia ni borra nada.'],
+      admin: ['Todo: además habilita reinducciones, borra registros y maneja Clientes y la Papelera.']
+    }
+  }
+};
+const unirY = l => l.length > 1 ? l.slice(0, -1).join(', ') + ' y ' + l[l.length - 1] : l.join('');
+function infoRolRH(rol) {
+  if (rol === 'admin') return ['Todo, en todas las secciones.', 'Además: Respaldo y datos, y todos los datos de salud (Seguimientos médicos).'];
+  const p = plantillaRH(rol), nombres = v => seccionesRH().filter(s => p[s.clave] === v).map(s => s.nombre);
+  const t = [];
+  if (nombres('editar').length) t.push('Edita: ' + unirY(nombres('editar')) + '.');
+  if (nombres('ver').length) t.push('Consulta: ' + unirY(nombres('ver')) + '.');
+  if (p.novedades === 'editar') t.push('En Novedades cambia o borra solo las que él registró.');
+  return t.length ? t : [AYUDA.rh[rol] || ''];
+}
+// Panel «¿Qué hace cada rol?» de un programa, con el rol elegido resaltado.
+const rolesAbiertos = new Set(['documental', 'rh', 'firmas', 'academia']);   // con la ficha en grande, se ven de entrada
+function panelRoles(k, actual) {
+  const info = INFO_ROLES[k] || {};
+  const filas = OPCIONES[k].filter(([v]) => v !== 'sin_acceso').map(([v, nombre]) => {
+    const textos = k === 'rh' ? infoRolRH(v) : (info.roles?.[v] || [AYUDA[k][v] || '']);
+    return `<div class="r-rol${v === actual ? ' actual' : ''}"><div class="r-nom">${esc(nombre)}${v === actual ? '<span class="r-tag">elegido</span>' : ''}</div>
+      ${textos.map(t => `<div class="r-txt">${esc(t)}</div>`).join('')}</div>`;
+  }).join('');
+  return `<div class="r-panel">${filas}${info.nota ? `<div class="r-nota">${esc(info.nota)}</div>` : ''}</div>`;
+}
 const CLAVES_AREAS = Object.keys(ETQ.areas);
 const CLAVES_MEDICOS = Object.keys(ETQ.medicos);
 let borradores = {}, originales = {};
@@ -942,43 +1049,48 @@ function htmlPrograma(k) {
   const prog = programas.find(p => p.clave === k) || {};
   const ayuda = k === 'rh' && b.secciones != null && b.rol !== 'admin' && b.rol !== 'sin_acceso'
     ? 'Con las secciones elegidas abajo, una por una.' : AYUDA[k][b.rol] || '';
-  let cuerpo = `<label class="f-fila">${k === 'caja' || k === 'academia' ? 'Acceso' : 'Rol'}</label>
+  const verRoles = rolesAbiertos.has(k);
+  // Dos columnas: a la izquierda el rol y hasta dónde llega; a la derecha el detalle (áreas, secciones, contratos).
+  let izq = `<div class="f-fila-rol"><label class="f-fila">${k === 'caja' || k === 'academia' ? 'Acceso' : 'Rol'}</label>
+      ${k === 'caja' ? '' : `<button type="button" class="f-info" data-accion="info-roles" aria-expanded="${verRoles}">ⓘ ${verRoles ? 'Ocultar los roles' : '¿Qué hace cada rol?'}</button>`}</div>
     <select class="f-sel" data-campo="rol">${opcionesSelect(k, b.rol)}</select>
-    <div class="f-ayuda">${esc(ayuda)}</div>`;
+    <div class="f-ayuda">${esc(ayuda)}</div>
+    ${verRoles && k !== 'caja' ? panelRoles(k, b.rol) : ''}`;
+  let der = '';
   if (k === 'documental' && b.rol !== 'sin_acceso') {
-    if (b.rol === 'admin') cuerpo += `<div class="f-fila">Áreas</div><div class="f-val">Todas (es administrador)</div>`;
+    if (b.rol === 'admin') der += `<div class="f-fila">Áreas</div><div class="f-val">Todas (es administrador)</div>`;
     else {
-      cuerpo += `<div class="f-fila">Áreas</div>
+      der += `<div class="f-fila">Áreas</div>
         <div class="f-radios"><label><input type="radio" name="doc-modo" data-campo="modo-areas" value="todas"${b.areas == null ? ' checked' : ''}> Todas las áreas</label>
         <label><input type="radio" name="doc-modo" data-campo="modo-areas" value="algunas"${b.areas != null ? ' checked' : ''}> Solo estas</label></div>`;
-      if (b.areas != null) cuerpo += casillas('area', (catalogo?.documental?.areas || []).map(a => [a.clave, a.nombre]), b.areas);
+      if (b.areas != null) der += casillas('area', (catalogo?.documental?.areas || []).map(a => [a.clave, a.nombre]), b.areas);
     }
   }
-  if (k === 'rh' && b.rol !== 'sin_acceso' && contratosRH().length) cuerpo += editorContratosRH(b);
-  if (k === 'rh' && b.rol !== 'sin_acceso' && seccionesRH().length) cuerpo += editorSeccionesRH(b);
+  if (k === 'rh' && b.rol !== 'sin_acceso' && contratosRH().length) izq += editorContratosRH(b);
+  if (k === 'rh' && b.rol !== 'sin_acceso' && seccionesRH().length) der += editorSeccionesRH(b);
   if (k === 'rh' && b.rol !== 'sin_acceso') {
-    cuerpo += `<div class="f-fila">Seguimientos médicos <span class="f-sub">(datos de salud)</span></div>`;
-    if (b.rol === 'admin') cuerpo += `<div class="f-val">Todo: el administrador de RH ve todo lo médico.</div>`;
-    else if (b.contratos != null) cuerpo += `<div class="f-val">Solo para quien tiene todos los contratos.</div>`;
-    else cuerpo += `<div class="f-presets">
+    der += `<div class="f-fila">Seguimientos médicos <span class="f-sub">(datos de salud)</span></div>`;
+    if (b.rol === 'admin') der += `<div class="f-val">Todo: el administrador de RH ve todo lo médico.</div>`;
+    else if (b.contratos != null) der += `<div class="f-val">Solo para quien tiene todos los contratos.</div>`;
+    else der += `<div class="f-presets">
         <button type="button" class="f-mini" data-accion="medico-preset" data-valor="todos">Responsable SST</button>
         <button type="button" class="f-mini" data-accion="medico-preset" data-valor="consulta">Solo consulta</button>
         <button type="button" class="f-mini" data-accion="medico-preset" data-valor="ninguno">Ninguno</button></div>`
       + casillas('medico', (catalogo?.rh?.medicos || []).map(m => [m.clave, m.nombre]), b.medicos);
   }
   if (k === 'firmas' && b.rol !== 'sin_acceso') {
-    if (b.rol === 'admin') cuerpo += `<div class="f-val" style="margin-top:8px">Como administrador entra a todos los módulos y contratos.</div>`;
+    if (b.rol === 'admin') izq += `<div class="f-val" style="margin-top:8px">Como administrador entra a todos los módulos y contratos.</div>`;
     else {
-      cuerpo += `<div class="f-fila">Módulos</div>` + casillas('modulo', (catalogo?.firmas?.modulos || []).map(m => [m.clave, m.nombre]), b.modulos);
-      for (const m of MOD_CONTRATOS) if (b.modulos.includes(m)) cuerpo += editorContratos(m, b);
-      if (!b.modulos.length) cuerpo += `<div class="f-aviso">Sin módulos no podrá hacer nada en Firmas.</div>`;
+      izq += `<div class="f-fila">Módulos</div>` + casillas('modulo', (catalogo?.firmas?.modulos || []).map(m => [m.clave, m.nombre]), b.modulos);
+      for (const m of MOD_CONTRATOS) if (b.modulos.includes(m)) der += editorContratos(m, b);
+      if (!b.modulos.length) izq += `<div class="f-aviso">Sin módulos no podrá hacer nada en Firmas.</div>`;
     }
   }
   if (k === 'firmas' && u.accesos?.firmas?.existe && u.accesos.firmas.activo === false)
-    cuerpo += `<div class="f-aviso">Hoy su cuenta está desactivada en Firmas. Si le das acceso, queda activa otra vez.</div>`;
+    izq += `<div class="f-aviso">Hoy su cuenta está desactivada en Firmas. Si le das acceso, queda activa otra vez.</div>`;
   const cambios = hayCambios(k);
   return `<div class="f-prog-cab"><div class="f-prog-nombre">${esc(ICONO_PROG[k])} ${esc(prog.nombre || NOMBRE_PROG[k])}</div>${chip(resumen(k, u.accesos?.[k]))}</div>
-    ${cuerpo}
+    <div class="f-dos${der ? '' : ' una'}"><div class="f-col">${izq}</div>${der ? `<div class="f-col">${der}</div>` : ''}</div>
     <div class="f-acciones">
       <span class="f-sin-guardar"${cambios ? '' : ' hidden'}>● Cambios sin guardar</span>
       <button type="button" class="f-btn f-btn-sec" data-accion="deshacer"${cambios ? '' : ' hidden'}>Deshacer</button>
@@ -988,8 +1100,10 @@ function htmlPrograma(k) {
 function repintarPrograma(k) {
   const el = document.querySelector(`#ficha [data-prog="${k}"]`);
   if (el) el.innerHTML = htmlPrograma(k);
+  pintarNavFicha();
 }
 function actualizarPie(k) {
+  pintarNavFicha();
   const el = document.querySelector(`#ficha [data-prog="${k}"]`);
   if (!el) return;
   const cambios = hayCambios(k);
@@ -998,34 +1112,75 @@ function actualizarPie(k) {
   el.querySelector('[data-accion="guardar"]').disabled = !cambios;
 }
 
+// La ficha ocupa toda la pantalla: a la izquierda los programas (y el historial), a la derecha el
+// que esté elegido. El elegido se recuerda al pasar de una persona a otra.
+let programaElegido = (() => { try { return localStorage.getItem('portal.ficha.programa') || 'documental'; } catch (e) { return 'documental'; } })();
+const colorProg = k => (programas.find(p => p.clave === k) || {}).color || '#0039b3';
+function pintarNavFicha() {
+  const nav = $('f-nav'), u = usuarioAbierto();
+  if (!nav || !u) return;
+  nav.innerHTML = PROGRAMAS.map(k => {
+    const r = resumen(k, u.accesos?.[k]);
+    return `<button type="button" class="n-item${programaElegido === k ? ' activo' : ''}" data-ver="${k}" style="--pc:${esc(colorProg(k))}">
+      <span class="n-ico" aria-hidden="true">${esc(ICONO_PROG[k])}</span>
+      <span class="n-txt"><span class="n-nom">${esc(NOMBRE_PROG[k])}${hayCambios(k) ? '<span class="n-pend" title="Cambios sin guardar">● sin guardar</span>' : ''}</span>
+        <span class="n-est n-${r.estado}">${esc(r.texto)}${r.detalle ? ' · ' + esc(r.detalle) : ''}</span></span></button>`;
+  }).join('') + `<button type="button" class="n-item n-hist${programaElegido === 'historial' ? ' activo' : ''}" data-ver="historial">
+      <span class="n-ico" aria-hidden="true">🕘</span><span class="n-txt"><span class="n-nom">Historial</span><span class="n-est">Cambios hechos desde el Portal</span></span></button>`;
+}
+function pintarZonaFicha() {
+  const main = $('f-main'), u = usuarioAbierto();
+  if (!main || !u) return;
+  if (!PROGRAMAS.includes(programaElegido) && programaElegido !== 'historial') programaElegido = 'documental';
+  main.innerHTML = programaElegido === 'historial'
+    ? `<div class="f-tarjeta f-hist-grande"><div class="f-hist-titulo">Historial de cambios</div><div id="f-historial">Cargando…</div></div>`
+    : `<div class="f-prog f-prog-grande" data-prog="${programaElegido}" style="--pc:${esc(colorProg(programaElegido))}">${htmlPrograma(programaElegido)}</div>`;
+  pintarNavFicha();
+  if (programaElegido === 'historial') cargarHistorial(u.id);
+}
+
 function abrirFicha(id) {
   const u = (usuarios || []).find(x => x.id === id);
   if (!u) return;
+  const misma = fichaAbierta === id && !$('ficha-fondo').hidden;
   fichaAbierta = id;
   borradores = {}; originales = {};
   for (const k of PROGRAMAS) { originales[k] = aBorrador(k, u.accesos?.[k]); borradores[k] = clonar(originales[k]); }
   const marcas = (u.es_admin ? ' <span class="chip chip-ok">Administrador general</span>' : '')
                + (u.suspendido ? ' <span class="chip chip-ojo">Cuenta suspendida</span>' : '');
-  $('ficha').innerHTML = `
-    <div class="f-cab">
-      ${avatar(u, 'f-av')}
-      <div style="min-width:0">
-        <div class="f-nombre">${esc(u.nombre)}${marcas}</div>
-        <div class="f-meta">${esc(u.correo)}${u.cargo ? ' · ' + esc(u.cargo) : ''}<br>
-          Último ingreso: ${esc(hace(u.ultimo_ingreso))} · Cuenta creada ${esc(hace(u.creado_en))}</div>
+  $('ficha').innerHTML = `<div class="f-pagina">
+    <button type="button" class="f-volver" onclick="cerrarFicha()">← Usuarios y accesos</button>
+    <div class="f-tarjeta">
+      <div class="f-cab">
+        ${avatar(u, 'f-av')}
+        <div style="min-width:0">
+          <div class="f-nombre">${esc(u.nombre)}${marcas}</div>
+          <div class="f-meta">${esc(u.correo)}${u.cargo ? ' · ' + esc(u.cargo) : ''}<br>
+            Último ingreso: ${esc(hace(u.ultimo_ingreso))} · Cuenta creada ${esc(hace(u.creado_en))}</div>
+        </div>
+        <button class="f-cerrar" onclick="cerrarFicha()" aria-label="Cerrar">✕</button>
       </div>
-      <button class="f-cerrar" onclick="cerrarFicha()" aria-label="Cerrar">✕</button>
+      <div class="f-acciones-cuenta">${accionesCuenta(u)}</div>
+      <div id="f-panel" hidden></div>
     </div>
-    <div class="f-acciones-cuenta">${accionesCuenta(u)}</div>
-    <div id="f-panel" hidden></div>
     ${u.suspendido ? '<div class="f-suspendida">⏸️ Cuenta suspendida: no puede entrar a ningún programa. Para cambiar sus accesos, primero reactívala.</div>' : ''}
-    <div class="f-cuerpo${u.suspendido ? ' bloqueado' : ''}">${PROGRAMAS.map(k => {
-      const color = (programas.find(p => p.clave === k) || {}).color || '#0039b3';
-      return `<div class="f-prog" data-prog="${k}" style="--pc:${esc(color)}">${htmlPrograma(k)}</div>`; }).join('')}</div>
-    <div class="f-historial"><div class="f-hist-titulo">Historial de cambios</div><div id="f-historial">Cargando…</div></div>`;
+    <div class="f-zona">
+      <nav class="f-tarjeta f-nav" id="f-nav" aria-label="Programas"></nav>
+      <div class="f-main${u.suspendido ? ' bloqueado' : ''}" id="f-main"></div>
+    </div></div>`;
+  pintarZonaFicha();
   $('ficha-fondo').hidden = false;
-  cargarHistorial(id);
+  if (!misma) $('ficha-fondo').scrollTop = 0;
 }
+$('ficha').addEventListener('click', ev => {
+  const n = ev.target.closest('[data-ver]');
+  if (!n) return;
+  programaElegido = n.dataset.ver;
+  try { localStorage.setItem('portal.ficha.programa', programaElegido); } catch (e) {}
+  pintarZonaFicha();
+  const zona = document.querySelector('#ficha .f-zona');
+  if (zona && zona.getBoundingClientRect().top < 0) zona.scrollIntoView({ block: 'start' });
+});
 
 async function cerrarFicha(forzar) {
   if (!forzar && fichaAbierta && PROGRAMAS.some(hayCambios)) {
@@ -1119,6 +1274,7 @@ $('ficha').addEventListener('click', ev => {
   const k = caja.dataset.prog, b = borradores[k], acc = bt.dataset.accion;
   if (acc === 'guardar') return guardarPrograma(k);
   if (acc === 'deshacer') { borradores[k] = clonar(originales[k]); return repintarPrograma(k); }
+  if (acc === 'info-roles') { if (!rolesAbiertos.delete(k)) rolesAbiertos.add(k); return repintarPrograma(k); }
   if (acc === 'rh-contratos-ninguno') { b.contratos = []; return repintarPrograma(k); }
   if (acc === 'medico-preset') {
     b.medicos = bt.dataset.valor === 'todos' ? [...CLAVES_MEDICOS] : bt.dataset.valor === 'consulta' ? ['ver'] : [];

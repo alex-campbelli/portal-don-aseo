@@ -186,6 +186,10 @@ button.ws-stat{cursor:pointer}
 .s-op.activa.s-editar{background:var(--navy);border-color:var(--navy);color:#fff}
 .s-fija .s-op{cursor:default;pointer-events:none}
 .s-fija .s-op:not(.activa){opacity:.4}
+.s-bloq .s-nom{color:#9aa4b2}
+.s-bloq .s-op{cursor:default;pointer-events:none}
+.s-bloq .s-op:not(.activa){opacity:.4}
+.c-act{font-size:11px;color:var(--ws-muted);white-space:nowrap}
 .f-historial{padding:0 26px 24px}
 .f-hist-titulo{font-size:14px;font-weight:800;color:#12213b;margin-bottom:8px}
 .h-lista{border:1px solid var(--ws-line);border-radius:12px;max-height:240px;overflow-y:auto}
@@ -486,6 +490,8 @@ function resumen(clave, a) {
     if (!a.tiene) return { estado: 'no', texto: 'Sin acceso', detalle: '' };
     const m = a.medicos || [], det = [];
     if (a.rol !== 'admin' && a.secciones && typeof a.secciones === 'object') det.push('Secciones a medida');
+    if (a.rol !== 'admin' && Array.isArray(a.contratos))
+      det.push(a.contratos.length === 1 ? 'Contrato: ' + nombreContratoRH(a.contratos[0]) : a.contratos.length + ' contratos');
     if (a.rol === 'admin') det.push('Incluye todo lo médico');
     else if (m.includes('admin')) det.push('Médico: todo');
     else if (m.length) det.push('Médico: ' + lista(m, ETQ.medicos).join(', ').toLowerCase());
@@ -781,6 +787,21 @@ function plantillaRH(rol) {
 const ordenarSecciones = o => Object.fromEntries(seccionesRH().filter(s => o?.[s.clave] === 'ver' || o?.[s.clave] === 'editar').map(s => [s.clave, o[s.clave]]));
 const tieneAlgunaSeccion = o => Object.values(o || {}).some(v => v === 'ver' || v === 'editar');
 
+// Contratos de RH (clientes): vienen del catálogo de la base. null = todos los contratos.
+const contratosRH = () => catalogo?.rh?.contratos || [];
+const nombreContratoRH = clave => contratosRH().find(c => c.clave === clave)?.nombre || clave;
+// Las secciones globales (Importación, Corrección, Catálogos, Certificados, Auditoría) trabajan con
+// todos los empleados: no van con contratos, igual que los permisos médicos. La base lo exige igual.
+const esGlobalRH = clave => !!seccionesRH().find(s => s.clave === clave)?.global;
+const sinGlobales = o => Object.fromEntries(Object.entries(o || {}).filter(([s]) => !esGlobalRH(s)));
+const plantillaConGlobales = rol => Object.keys(plantillaRH(rol)).some(esGlobalRH);
+function ajustarParaContratos(b) {
+  if (b.contratos == null || b.rol === 'admin' || b.rol === 'sin_acceso') return;
+  if (b.secciones != null) b.secciones = sinGlobales(b.secciones);
+  else if (plantillaConGlobales(b.rol)) b.secciones = sinGlobales(plantillaRH(b.rol));
+  b.medicos = [];
+}
+
 const clonar = o => JSON.parse(JSON.stringify(o));
 const enOrden = (arr, orden) => orden.filter(x => (arr || []).includes(x));
 function usuarioAbierto() { return (usuarios || []).find(x => x.id === fichaAbierta); }
@@ -790,7 +811,8 @@ function aBorrador(k, a) {
   a = a || {};
   if (k === 'documental') return { rol: a.tiene ? a.rol : 'sin_acceso', areas: a.tiene && a.rol !== 'admin' && Array.isArray(a.areas) ? [...a.areas] : null };
   if (k === 'rh') return { rol: a.tiene ? a.rol : 'sin_acceso', medicos: [...(a.medicos || [])],
-                           secciones: a.tiene && a.rol !== 'admin' && a.secciones && typeof a.secciones === 'object' ? { ...a.secciones } : null };
+                           secciones: a.tiene && a.rol !== 'admin' && a.secciones && typeof a.secciones === 'object' ? { ...a.secciones } : null,
+                           contratos: a.tiene && a.rol !== 'admin' && Array.isArray(a.contratos) ? [...a.contratos] : null };
   if (k === 'firmas') {
     const c = a.contratos || {};
     return { rol: a.tiene ? (a.admin ? 'admin' : a.rol) : 'sin_acceso', modulos: [...(a.modulos || [])],
@@ -810,7 +832,10 @@ function carga(k, b) {
       secciones = ordenarSecciones(b.secciones);
       if (JSON.stringify(secciones) === JSON.stringify(ordenarSecciones(plantillaRH(b.rol)))) secciones = null;
     }
-    return { rol: b.rol, medicos: (b.rol === 'sin_acceso' || b.rol === 'admin') ? [] : enOrden(b.medicos, CLAVES_MEDICOS), secciones };
+    // contratos: null = todos.
+    const contratos = (b.rol === 'sin_acceso' || b.rol === 'admin' || b.contratos == null || !contratosRH().length)
+      ? null : [...new Set(b.contratos)].sort();
+    return { rol: b.rol, medicos: (b.rol === 'sin_acceso' || b.rol === 'admin') ? [] : enOrden(b.medicos, CLAVES_MEDICOS), secciones, contratos };
   }
   if (k === 'firmas') {
     if (b.rol === 'sin_acceso') return { rol: 'sin_acceso', modulos: [], contratos: {} };
@@ -866,20 +891,47 @@ function editorContratos(mod, b) {
   </div>`;
 }
 
+// Contratos de RH: todos, o solo algunos (entonces solo ve los empleados de esos contratos).
+function editorContratosRH(b) {
+  if (b.rol === 'admin') return `<div class="f-fila">Contratos</div><div class="f-val">Todos (es administrador de RH).</div>`;
+  const algunos = b.contratos != null;
+  let html = `<div class="f-fila">Contratos <span class="f-sub">(de qué clientes ve empleados)</span></div>
+    <div class="f-radios"><label><input type="radio" name="rh-contratos" data-campo="modo-contratos" value="todos"${algunos ? '' : ' checked'}> Todos los contratos</label>
+      <label><input type="radio" name="rh-contratos" data-campo="modo-contratos" value="algunos"${algunos ? ' checked' : ''}> Solo estos</label></div>`;
+  if (!algunos) return html;
+  const sel = b.contratos, todos = contratosRH();
+  // Primero los elegidos, luego los que tienen empleados activos, luego el resto; cada grupo en orden alfabético.
+  const lista = [...todos].sort((x, y) => (sel.includes(y.clave) - sel.includes(x.clave)) || ((y.activos > 0) - (x.activos > 0))
+                                          || x.nombre.localeCompare(y.nombre, 'es'));
+  return html + `<div class="c-caja" data-mod="rh">
+      <div class="c-cab"><b>Contratos de RH</b><span class="c-cuenta" data-cuenta="rh">${sel.length} de ${todos.length}</span>
+        <span class="c-botones"><button type="button" class="f-mini" data-accion="rh-contratos-ninguno">Ninguno</button></span></div>
+      ${todos.length > 8 ? '<input class="c-buscar" type="text" placeholder="Buscar contrato" autocomplete="off">' : ''}
+      <div class="c-lista">${lista.map(c => `<div class="c-item" data-nombre="${esc(c.nombre.toLowerCase())}">
+        <label class="c-nom"><input type="checkbox" data-campo="contrato-rh" value="${esc(c.clave)}"${sel.includes(c.clave) ? ' checked' : ''}> ${esc(c.nombre)}</label>
+        <span class="c-act">${c.activos ? c.activos + (c.activos === 1 ? ' activo' : ' activos') : 'sin activos'}</span></div>`).join('')}</div>
+    </div>
+    <div class="f-aviso" data-aviso="sin-contratos"${sel.length ? ' hidden' : ''}>Elige al menos un contrato, o marca «Todos los contratos».</div>
+    <div class="f-ayuda">Solo ve los empleados de estos contratos, con sus documentos y novedades. No puede tener Importación, Corrección de datos, Catálogos, Certificados, Auditoría ni Seguimientos médicos, porque trabajan con todos los empleados.</div>`;
+}
+
 // Secciones de RH: las de su rol (fijas, para ver qué da) o elegidas una por una.
 function editorSeccionesRH(b) {
   if (b.rol === 'admin') return `<div class="f-fila">Secciones</div><div class="f-val">Todas, con ver y editar (es administrador de RH).</div>`;
   const aMedida = b.secciones != null, niveles = aMedida ? b.secciones : plantillaRH(b.rol);
+  const conContratos = b.contratos != null, rolBloqueado = conContratos && plantillaConGlobales(b.rol);
   const filas = seccionesRH().map(s => {
-    const v = niveles[s.clave] === 'ver' || niveles[s.clave] === 'editar' ? niveles[s.clave] : 'no';
+    const bloq = conContratos && s.global;   // con contratos, las globales quedan en «No»
+    const v = !bloq && (niveles[s.clave] === 'ver' || niveles[s.clave] === 'editar') ? niveles[s.clave] : 'no';
     const ops = [['no', 'No'], ['ver', 'Ver']].concat(s.solo_ver ? [] : [['editar', 'Editar']]);
-    return `<div class="s-fila"><span class="s-nom">${esc(s.nombre)}</span>
+    return `<div class="s-fila${bloq ? ' s-bloq' : ''}"${bloq ? ' title="Solo con todos los contratos"' : ''}><span class="s-nom">${esc(s.nombre)}</span>
       <span class="s-niveles" role="radiogroup" aria-label="${esc(s.nombre)}">${ops.map(([val, t]) =>
-        `<label class="s-op s-${val}${v === val ? ' activa' : ''}"><input type="radio" name="rh-sec-${esc(s.clave)}" data-campo="seccion" data-sec="${esc(s.clave)}" value="${val}"${v === val ? ' checked' : ''}${aMedida ? '' : ' disabled'}>${t}</label>`).join('')}</span></div>`;
+        `<label class="s-op s-${val}${v === val ? ' activa' : ''}"><input type="radio" name="rh-sec-${esc(s.clave)}" data-campo="seccion" data-sec="${esc(s.clave)}" value="${val}"${v === val ? ' checked' : ''}${aMedida && !bloq ? '' : ' disabled'}>${t}</label>`).join('')}</span></div>`;
   }).join('');
   return `<div class="f-fila">Secciones</div>
-    <div class="f-radios"><label><input type="radio" name="rh-modo" data-campo="modo-secciones" value="rol"${aMedida ? '' : ' checked'}> Las de su rol</label>
+    <div class="f-radios"><label><input type="radio" name="rh-modo" data-campo="modo-secciones" value="rol"${aMedida ? '' : ' checked'}${rolBloqueado ? ' disabled' : ''}> Las de su rol</label>
       <label><input type="radio" name="rh-modo" data-campo="modo-secciones" value="medida"${aMedida ? ' checked' : ''}> Elegir una por una</label></div>
+    ${rolBloqueado ? `<div class="f-ayuda">El rol ${esc(ETQ.rh[b.rol] || b.rol)} trae secciones que no van con contratos: elígelas una por una.</div>` : ''}
     <div class="s-lista${aMedida ? '' : ' s-fija'}">${filas}</div>
     <div class="f-ayuda">Ver: solo consulta. Editar: también crea, cambia y borra. Respaldo y datos es solo del administrador de RH.</div>
     ${aMedida ? `<div class="f-aviso" data-aviso="sin-secciones"${tieneAlgunaSeccion(b.secciones) ? ' hidden' : ''}>Sin ninguna sección no podrá hacer nada en RH. Elige al menos una o ponle «Sin acceso».</div>` : ''}`;
@@ -902,10 +954,12 @@ function htmlPrograma(k) {
       if (b.areas != null) cuerpo += casillas('area', (catalogo?.documental?.areas || []).map(a => [a.clave, a.nombre]), b.areas);
     }
   }
+  if (k === 'rh' && b.rol !== 'sin_acceso' && contratosRH().length) cuerpo += editorContratosRH(b);
   if (k === 'rh' && b.rol !== 'sin_acceso' && seccionesRH().length) cuerpo += editorSeccionesRH(b);
   if (k === 'rh' && b.rol !== 'sin_acceso') {
     cuerpo += `<div class="f-fila">Seguimientos médicos <span class="f-sub">(datos de salud)</span></div>`;
     if (b.rol === 'admin') cuerpo += `<div class="f-val">Todo: el administrador de RH ve todo lo médico.</div>`;
+    else if (b.contratos != null) cuerpo += `<div class="f-val">Solo para quien tiene todos los contratos.</div>`;
     else cuerpo += `<div class="f-presets">
         <button type="button" class="f-mini" data-accion="medico-preset" data-valor="todos">Responsable SST</button>
         <button type="button" class="f-mini" data-accion="medico-preset" data-valor="consulta">Solo consulta</button>
@@ -1003,10 +1057,26 @@ $('ficha').addEventListener('change', ev => {
   const k = caja.dataset.prog, b = borradores[k], campo = el.dataset.campo;
   if (campo === 'rol') {
     b.rol = el.value;
-    if (k === 'rh') b.secciones = null;   // con otro rol, vuelve a las secciones de ese rol
+    if (k === 'rh') { b.secciones = null; ajustarParaContratos(b); }   // con otro rol, vuelve a las secciones de ese rol
     return repintarPrograma(k);
   }
-  if (campo === 'modo-secciones') { b.secciones = el.value === 'medida' ? { ...plantillaRH(b.rol) } : null; return repintarPrograma(k); }
+  if (campo === 'modo-contratos') {
+    b.contratos = el.value === 'algunos' ? (b.contratos || []) : null;
+    ajustarParaContratos(b);
+    return repintarPrograma(k);
+  }
+  if (campo === 'contrato-rh') {
+    b.contratos = el.checked ? [...new Set([...(b.contratos || []), el.value])] : (b.contratos || []).filter(x => x !== el.value);
+    const cuenta = caja.querySelector('[data-cuenta="rh"]');
+    if (cuenta) cuenta.textContent = `${b.contratos.length} de ${contratosRH().length}`;
+    const av = caja.querySelector('[data-aviso="sin-contratos"]');
+    if (av) av.hidden = b.contratos.length > 0;
+    return actualizarPie(k);
+  }
+  if (campo === 'modo-secciones') {
+    b.secciones = el.value === 'medida' ? (b.contratos != null ? sinGlobales(plantillaRH(b.rol)) : { ...plantillaRH(b.rol) }) : null;
+    return repintarPrograma(k);
+  }
   if (campo === 'seccion') {
     b.secciones = { ...(b.secciones || {}), [el.dataset.sec]: el.value };
     el.closest('.s-niveles').querySelectorAll('.s-op').forEach(op => op.classList.toggle('activa', op.contains(el)));
@@ -1049,6 +1119,7 @@ $('ficha').addEventListener('click', ev => {
   const k = caja.dataset.prog, b = borradores[k], acc = bt.dataset.accion;
   if (acc === 'guardar') return guardarPrograma(k);
   if (acc === 'deshacer') { borradores[k] = clonar(originales[k]); return repintarPrograma(k); }
+  if (acc === 'rh-contratos-ninguno') { b.contratos = []; return repintarPrograma(k); }
   if (acc === 'medico-preset') {
     b.medicos = bt.dataset.valor === 'todos' ? [...CLAVES_MEDICOS] : bt.dataset.valor === 'consulta' ? ['ver'] : [];
     return repintarPrograma(k);
@@ -1067,6 +1138,9 @@ function mensajeError(error, k) {
   if (m.includes('no_autorizado')) return 'Tu cuenta no es administradora general del Portal.';
   if (m.includes('contrato_invalido')) return 'Alguno de los contratos ya no existe. Recarga la página y vuelve a intentarlo.';
   if (m.includes('sin_secciones')) return 'Elige al menos una sección de RH, o ponle «Sin acceso».';
+  if (m.includes('sin_contratos')) return 'Elige al menos un contrato de RH, o marca «Todos los contratos».';
+  if (m.includes('seccion_global_con_contratos')) return 'Con contratos no puede tener Importación, Corrección de datos, Catálogos, Certificados ni Auditoría.';
+  if (m.includes('medicos_con_contratos')) return 'Con contratos no puede tener permisos de Seguimientos médicos.';
   if (m.includes('seccion_invalida')) return 'Alguna sección de RH no es válida. Recarga la página y vuelve a intentarlo.';
   if (m.includes('usuario_no_existe')) return 'Esa cuenta ya no existe.';
   return 'No se pudo guardar: ' + m;
@@ -1078,6 +1152,11 @@ async function guardarPrograma(k) {
   const b = borradores[k], o = originales[k], nom = NOMBRE_PROG[k];
   if (k === 'rh' && b.rol !== 'sin_acceso' && b.rol !== 'admin' && b.secciones != null && !tieneAlgunaSeccion(b.secciones))
     return aviso(mensajeError('sin_secciones', k), true);
+  if (k === 'rh' && b.rol !== 'sin_acceso' && b.rol !== 'admin' && b.contratos != null && !b.contratos.length)
+    return aviso(mensajeError('sin_contratos', k), true);
+  if (k === 'rh' && b.rol !== 'sin_acceso' && b.rol !== 'admin' && b.contratos != null && (o.medicos || []).length
+      && !await preguntar({ icono: '🩺', tono: 'aviso', titulo: `¿Quitarle a ${u.nombre} los permisos médicos?`,
+                           texto: 'Con solo algunos contratos no puede tener Seguimientos médicos. Se le quitan al guardar.', si: 'Sí, guardar' })) return;
   if (b.rol === 'sin_acceso' && o.rol !== 'sin_acceso'
       && !await preguntar({ icono: '🚫', tono: 'peligro', titulo: `¿Quitarle a ${u.nombre} el acceso a ${nom}?`,
                            texto: `Ya no podrá entrar a ${nom}. Se lo puedes volver a dar cuando quieras.`, si: 'Sí, quitar el acceso' })) return;

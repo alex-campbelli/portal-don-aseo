@@ -171,6 +171,21 @@ button.ws-stat{cursor:pointer}
 .c-nom{display:flex;align-items:center;gap:7px;cursor:pointer;min-width:0}
 .c-nom i{color:#9aa4b2;font-style:normal}
 .c-cat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ws-muted);white-space:nowrap;cursor:pointer}
+.s-lista{margin-top:8px;border:1px solid var(--ws-line);border-radius:12px;padding:4px 10px}
+.s-lista.s-fija{background:#fafbfe}
+.s-fila{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid #f1f3f7}
+.s-fila:last-child{border-bottom:none}
+.s-nom{font-size:12.5px;color:#12213b;min-width:0;line-height:1.3}
+.s-niveles{display:grid;grid-template-columns:30px 34px 48px;gap:4px;flex-shrink:0}
+.s-op{position:relative;display:flex;align-items:center;justify-content:center;height:24px;font-size:11.5px;font-weight:700;color:var(--gray-500);border:1.5px solid var(--border);border-radius:7px;background:#fff;cursor:pointer;user-select:none}
+.s-op input{position:absolute;opacity:0;width:0;height:0;margin:0}
+.s-op:hover{border-color:var(--navy);color:var(--navy)}
+.s-op:focus-within{box-shadow:0 0 0 3px rgba(0,51,153,.18)}
+.s-op.activa.s-no{background:#f1f3f7;border-color:#e1e5ec;color:#6b7686}
+.s-op.activa.s-ver{background:var(--navy-light);border-color:var(--navy-light);color:var(--navy)}
+.s-op.activa.s-editar{background:var(--navy);border-color:var(--navy);color:#fff}
+.s-fija .s-op{cursor:default;pointer-events:none}
+.s-fija .s-op:not(.activa){opacity:.4}
 .f-historial{padding:0 26px 24px}
 .f-hist-titulo{font-size:14px;font-weight:800;color:#12213b;margin-bottom:8px}
 .h-lista{border:1px solid var(--ws-line);border-radius:12px;max-height:240px;overflow-y:auto}
@@ -469,12 +484,12 @@ function resumen(clave, a) {
   }
   if (clave === 'rh') {
     if (!a.tiene) return { estado: 'no', texto: 'Sin acceso', detalle: '' };
-    const m = a.medicos || [];
-    let det = '';
-    if (a.rol === 'admin') det = 'Incluye todo lo médico';
-    else if (m.includes('admin')) det = 'Médico: todo';
-    else if (m.length) det = 'Médico: ' + lista(m, ETQ.medicos).join(', ').toLowerCase();
-    return { estado: 'si', texto: ETQ.rh[a.rol] || a.rol, detalle: det };
+    const m = a.medicos || [], det = [];
+    if (a.rol !== 'admin' && a.secciones && typeof a.secciones === 'object') det.push('Secciones a medida');
+    if (a.rol === 'admin') det.push('Incluye todo lo médico');
+    else if (m.includes('admin')) det.push('Médico: todo');
+    else if (m.length) det.push('Médico: ' + lista(m, ETQ.medicos).join(', ').toLowerCase());
+    return { estado: 'si', texto: ETQ.rh[a.rol] || a.rol, detalle: det.join(' · ') };
   }
   if (clave === 'firmas') {
     if (a.existe && a.activo === false) return { estado: 'ojo', texto: 'Desactivado', detalle: 'Acceso suspendido en Firmas' };
@@ -756,6 +771,16 @@ const CLAVES_AREAS = Object.keys(ETQ.areas);
 const CLAVES_MEDICOS = Object.keys(ETQ.medicos);
 let borradores = {}, originales = {};
 
+// Secciones de RH y lo que da cada rol: vienen del catálogo de la base.
+const seccionesRH = () => catalogo?.rh?.secciones || [];
+function plantillaRH(rol) {
+  if (rol === 'admin') return Object.fromEntries(seccionesRH().map(s => [s.clave, s.solo_ver ? 'ver' : 'editar']));
+  return catalogo?.rh?.plantillas?.[rol] || {};
+}
+// Solo las que ve o edita, en el orden del menú de RH (así se comparan y se guardan).
+const ordenarSecciones = o => Object.fromEntries(seccionesRH().filter(s => o?.[s.clave] === 'ver' || o?.[s.clave] === 'editar').map(s => [s.clave, o[s.clave]]));
+const tieneAlgunaSeccion = o => Object.values(o || {}).some(v => v === 'ver' || v === 'editar');
+
 const clonar = o => JSON.parse(JSON.stringify(o));
 const enOrden = (arr, orden) => orden.filter(x => (arr || []).includes(x));
 function usuarioAbierto() { return (usuarios || []).find(x => x.id === fichaAbierta); }
@@ -764,7 +789,8 @@ function usuarioAbierto() { return (usuarios || []).find(x => x.id === fichaAbie
 function aBorrador(k, a) {
   a = a || {};
   if (k === 'documental') return { rol: a.tiene ? a.rol : 'sin_acceso', areas: a.tiene && a.rol !== 'admin' && Array.isArray(a.areas) ? [...a.areas] : null };
-  if (k === 'rh') return { rol: a.tiene ? a.rol : 'sin_acceso', medicos: [...(a.medicos || [])] };
+  if (k === 'rh') return { rol: a.tiene ? a.rol : 'sin_acceso', medicos: [...(a.medicos || [])],
+                           secciones: a.tiene && a.rol !== 'admin' && a.secciones && typeof a.secciones === 'object' ? { ...a.secciones } : null };
   if (k === 'firmas') {
     const c = a.contratos || {};
     return { rol: a.tiene ? (a.admin ? 'admin' : a.rol) : 'sin_acceso', modulos: [...(a.modulos || [])],
@@ -777,7 +803,15 @@ function aBorrador(k, a) {
 // Forma editable → lo que se manda a la base (siempre ordenado, para comparar)
 function carga(k, b) {
   if (k === 'documental') return { rol: b.rol, areas: (b.rol === 'sin_acceso' || b.rol === 'admin' || b.areas == null) ? null : enOrden(b.areas, CLAVES_AREAS) };
-  if (k === 'rh') return { rol: b.rol, medicos: (b.rol === 'sin_acceso' || b.rol === 'admin') ? [] : enOrden(b.medicos, CLAVES_MEDICOS) };
+  if (k === 'rh') {
+    // secciones: null = las de su rol. Si quedan igual a las de su rol, también null (la base hace lo mismo).
+    let secciones = null;
+    if (b.rol !== 'sin_acceso' && b.rol !== 'admin' && b.secciones != null && seccionesRH().length) {
+      secciones = ordenarSecciones(b.secciones);
+      if (JSON.stringify(secciones) === JSON.stringify(ordenarSecciones(plantillaRH(b.rol)))) secciones = null;
+    }
+    return { rol: b.rol, medicos: (b.rol === 'sin_acceso' || b.rol === 'admin') ? [] : enOrden(b.medicos, CLAVES_MEDICOS), secciones };
+  }
   if (k === 'firmas') {
     if (b.rol === 'sin_acceso') return { rol: 'sin_acceso', modulos: [], contratos: {} };
     const mods = enOrden(b.modulos, ORDEN_MOD), ord = l => [...(l || [])].sort();
@@ -832,12 +866,33 @@ function editorContratos(mod, b) {
   </div>`;
 }
 
+// Secciones de RH: las de su rol (fijas, para ver qué da) o elegidas una por una.
+function editorSeccionesRH(b) {
+  if (b.rol === 'admin') return `<div class="f-fila">Secciones</div><div class="f-val">Todas, con ver y editar (es administrador de RH).</div>`;
+  const aMedida = b.secciones != null, niveles = aMedida ? b.secciones : plantillaRH(b.rol);
+  const filas = seccionesRH().map(s => {
+    const v = niveles[s.clave] === 'ver' || niveles[s.clave] === 'editar' ? niveles[s.clave] : 'no';
+    const ops = [['no', 'No'], ['ver', 'Ver']].concat(s.solo_ver ? [] : [['editar', 'Editar']]);
+    return `<div class="s-fila"><span class="s-nom">${esc(s.nombre)}</span>
+      <span class="s-niveles" role="radiogroup" aria-label="${esc(s.nombre)}">${ops.map(([val, t]) =>
+        `<label class="s-op s-${val}${v === val ? ' activa' : ''}"><input type="radio" name="rh-sec-${esc(s.clave)}" data-campo="seccion" data-sec="${esc(s.clave)}" value="${val}"${v === val ? ' checked' : ''}${aMedida ? '' : ' disabled'}>${t}</label>`).join('')}</span></div>`;
+  }).join('');
+  return `<div class="f-fila">Secciones</div>
+    <div class="f-radios"><label><input type="radio" name="rh-modo" data-campo="modo-secciones" value="rol"${aMedida ? '' : ' checked'}> Las de su rol</label>
+      <label><input type="radio" name="rh-modo" data-campo="modo-secciones" value="medida"${aMedida ? ' checked' : ''}> Elegir una por una</label></div>
+    <div class="s-lista${aMedida ? '' : ' s-fija'}">${filas}</div>
+    <div class="f-ayuda">Ver: solo consulta. Editar: también crea, cambia y borra. Respaldo y datos es solo del administrador de RH.</div>
+    ${aMedida ? `<div class="f-aviso" data-aviso="sin-secciones"${tieneAlgunaSeccion(b.secciones) ? ' hidden' : ''}>Sin ninguna sección no podrá hacer nada en RH. Elige al menos una o ponle «Sin acceso».</div>` : ''}`;
+}
+
 function htmlPrograma(k) {
   const u = usuarioAbierto(), b = borradores[k];
   const prog = programas.find(p => p.clave === k) || {};
+  const ayuda = k === 'rh' && b.secciones != null && b.rol !== 'admin' && b.rol !== 'sin_acceso'
+    ? 'Con las secciones elegidas abajo, una por una.' : AYUDA[k][b.rol] || '';
   let cuerpo = `<label class="f-fila">${k === 'caja' || k === 'academia' ? 'Acceso' : 'Rol'}</label>
     <select class="f-sel" data-campo="rol">${opcionesSelect(k, b.rol)}</select>
-    <div class="f-ayuda">${esc(AYUDA[k][b.rol] || '')}</div>`;
+    <div class="f-ayuda">${esc(ayuda)}</div>`;
   if (k === 'documental' && b.rol !== 'sin_acceso') {
     if (b.rol === 'admin') cuerpo += `<div class="f-fila">Áreas</div><div class="f-val">Todas (es administrador)</div>`;
     else {
@@ -847,6 +902,7 @@ function htmlPrograma(k) {
       if (b.areas != null) cuerpo += casillas('area', (catalogo?.documental?.areas || []).map(a => [a.clave, a.nombre]), b.areas);
     }
   }
+  if (k === 'rh' && b.rol !== 'sin_acceso' && seccionesRH().length) cuerpo += editorSeccionesRH(b);
   if (k === 'rh' && b.rol !== 'sin_acceso') {
     cuerpo += `<div class="f-fila">Seguimientos médicos <span class="f-sub">(datos de salud)</span></div>`;
     if (b.rol === 'admin') cuerpo += `<div class="f-val">Todo: el administrador de RH ve todo lo médico.</div>`;
@@ -947,7 +1003,16 @@ $('ficha').addEventListener('change', ev => {
   const k = caja.dataset.prog, b = borradores[k], campo = el.dataset.campo;
   if (campo === 'rol') {
     b.rol = el.value;
+    if (k === 'rh') b.secciones = null;   // con otro rol, vuelve a las secciones de ese rol
     return repintarPrograma(k);
+  }
+  if (campo === 'modo-secciones') { b.secciones = el.value === 'medida' ? { ...plantillaRH(b.rol) } : null; return repintarPrograma(k); }
+  if (campo === 'seccion') {
+    b.secciones = { ...(b.secciones || {}), [el.dataset.sec]: el.value };
+    el.closest('.s-niveles').querySelectorAll('.s-op').forEach(op => op.classList.toggle('activa', op.contains(el)));
+    const av = caja.querySelector('[data-aviso="sin-secciones"]');
+    if (av) av.hidden = tieneAlgunaSeccion(b.secciones);
+    return actualizarPie(k);
   }
   if (campo === 'modo-areas') { b.areas = el.value === 'todas' ? null : (b.areas || []); return repintarPrograma(k); }
   if (campo === 'area') { b.areas = el.checked ? [...new Set([...(b.areas || []), el.value])] : (b.areas || []).filter(x => x !== el.value); return actualizarPie(k); }
@@ -1001,6 +1066,8 @@ function mensajeError(error, k) {
   if (m.includes('ultimo_admin')) return `No se puede: ${NOMBRE_PROG[k]} quedaría sin ningún administrador. Nombra primero a otro administrador.`;
   if (m.includes('no_autorizado')) return 'Tu cuenta no es administradora general del Portal.';
   if (m.includes('contrato_invalido')) return 'Alguno de los contratos ya no existe. Recarga la página y vuelve a intentarlo.';
+  if (m.includes('sin_secciones')) return 'Elige al menos una sección de RH, o ponle «Sin acceso».';
+  if (m.includes('seccion_invalida')) return 'Alguna sección de RH no es válida. Recarga la página y vuelve a intentarlo.';
   if (m.includes('usuario_no_existe')) return 'Esa cuenta ya no existe.';
   return 'No se pudo guardar: ' + m;
 }
@@ -1009,6 +1076,8 @@ async function guardarPrograma(k) {
   const u = usuarioAbierto();
   if (!u || !hayCambios(k)) return;
   const b = borradores[k], o = originales[k], nom = NOMBRE_PROG[k];
+  if (k === 'rh' && b.rol !== 'sin_acceso' && b.rol !== 'admin' && b.secciones != null && !tieneAlgunaSeccion(b.secciones))
+    return aviso(mensajeError('sin_secciones', k), true);
   if (b.rol === 'sin_acceso' && o.rol !== 'sin_acceso'
       && !await preguntar({ icono: '🚫', tono: 'peligro', titulo: `¿Quitarle a ${u.nombre} el acceso a ${nom}?`,
                            texto: `Ya no podrá entrar a ${nom}. Se lo puedes volver a dar cuando quieras.`, si: 'Sí, quitar el acceso' })) return;

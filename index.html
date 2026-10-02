@@ -558,12 +558,14 @@ function resumen(clave, a) {
   }
   if (clave === 'academia') {
     if (!a.tiene) return { estado: 'no', texto: 'Sin acceso', detalle: '' };
-    return { estado: 'si', texto: ETQ.academia[a.rol] || a.rol, detalle: '' };
+    const det = a.rol === 'viewer' && Array.isArray(a.clientes)
+      ? (a.clientes.length === 1 ? 'Cliente: ' + nombreClienteAcademia(a.clientes[0]) : a.clientes.length + ' clientes') : '';
+    return { estado: 'si', texto: ETQ.academia[a.rol] || a.rol, detalle: det };
   }
   if (clave === 'caja') {
     if (a.existe && a.desactivado_en) return { estado: 'no', texto: 'Sin acceso', detalle: 'Desactivado ' + hace(a.desactivado_en) };
     if (!a.tiene) return { estado: 'no', texto: 'Sin acceso', detalle: '' };
-    return { estado: 'si', texto: 'Con acceso', detalle: '' };
+    return { estado: 'si', texto: a.nivel === 'consulta' ? 'Solo consulta' : 'Acceso total', detalle: '' };
   }
   return { estado: 'no', texto: '—', detalle: '' };
 }
@@ -818,14 +820,15 @@ const AYUDA = {
             editor: 'Trabaja en sus módulos y contratos.', admin: 'Todo: todos los módulos y todos los contratos.' },
   academia: { sin_acceso: 'No entra a la Academia.', viewer: 'Ve inducciones, reinducciones y certificados, y exporta.',
               admin: 'Todo: editar, borrar, clientes y papelera.' },
-  caja: { sin_acceso: 'No entra a Caja menor.', acceso: 'Hace todo en Caja menor (todavía no tiene niveles).' }
+  caja: { sin_acceso: 'No entra a Caja menor.', consulta: 'Ve todo y saca reportes, pero no registra, cambia ni borra nada.',
+          total: 'Hace todo en Caja menor: registrar, cambiar y borrar.' }
 };
 const OPCIONES = {
   documental: [['sin_acceso', 'Sin acceso'], ['invitado', 'Invitado'], ['viewer', 'Visualizador'], ['supervisor', 'Supervisor'], ['editor', 'Editor'], ['admin', 'Administrador']],
   rh: [['sin_acceso', 'Sin acceso'], ['viewer', 'Visualizador'], ['auxiliar', 'Auxiliar'], ['supervisor', 'Supervisor'], ['editor', 'Editor'], ['admin', 'Administrador']],
   firmas: [['sin_acceso', 'Sin acceso'], ['visualizador', 'Visualizador'], ['editor', 'Editor'], ['admin', 'Administrador']],
   academia: [['sin_acceso', 'Sin acceso'], ['viewer', 'Solo lectura'], ['admin', 'Administrador']],
-  caja: [['sin_acceso', 'Sin acceso'], ['acceso', 'Con acceso']]
+  caja: [['sin_acceso', 'Sin acceso'], ['consulta', 'Solo consulta'], ['total', 'Acceso total']]
 };
 // Qué hace cada rol, según la página de cada programa (su «Roles y permisos» o sus instrucciones).
 // En RH sale de la plantilla de cada rol (catálogo de la base), así siempre coincide con RH.
@@ -857,6 +860,14 @@ const INFO_ROLES = {
     roles: {
       viewer: ['Ve las inducciones, reinducciones y certificados, y los exporta.', 'No cambia ni borra nada.'],
       admin: ['Todo: además habilita reinducciones, borra registros y maneja Clientes y la Papelera.']
+    },
+    nota: 'A «Solo lectura» le puedes dejar solo algunos clientes o edificios: ve, exporta y certifica solo los de ellos.'
+  },
+  caja: {
+    roles: {
+      consulta: ['Ve todas las cajas, consignaciones, estadísticas y reportes; imprime, saca PDF y exporta.',
+                 'Descarga la copia de seguridad. No registra, cambia ni borra nada, y no importa datos.'],
+      total: ['Hace todo: registra y cambia cajas, consignaciones, personas, categorías, contratos y la configuración.']
     }
   }
 };
@@ -872,7 +883,7 @@ function infoRolRH(rol) {
   return t.length ? t : [AYUDA.rh[rol] || ''];
 }
 // Panel «¿Qué hace cada rol?» de un programa, con el rol elegido resaltado.
-const rolesAbiertos = new Set(['documental', 'rh', 'firmas', 'academia']);   // con la ficha en grande, se ven de entrada
+const rolesAbiertos = new Set(['documental', 'rh', 'firmas', 'academia', 'caja']);   // con la ficha en grande, se ven de entrada
 function panelRoles(k, actual) {
   const info = INFO_ROLES[k] || {};
   const filas = OPCIONES[k].filter(([v]) => v !== 'sin_acceso').map(([v, nombre]) => {
@@ -898,6 +909,9 @@ const tieneAlgunaSeccion = o => Object.values(o || {}).some(v => v === 'ver' || 
 
 // Contratos de RH (clientes): vienen del catálogo de la base. null = todos los contratos.
 const contratosRH = () => catalogo?.rh?.contratos || [];
+// Clientes o edificios de la Academia (fase 7): el catálogo más los que solo están en registros viejos.
+const clientesAcademia = () => catalogo?.academia?.clientes || [];
+const nombreClienteAcademia = clave => clientesAcademia().find(c => c.clave === clave)?.nombre || clave;
 const nombreContratoRH = clave => contratosRH().find(c => c.clave === clave)?.nombre || clave;
 // Las secciones globales (Importación, Corrección, Catálogos, Certificados, Auditoría) trabajan con
 // todos los empleados: no van con contratos, igual que los permisos médicos. La base lo exige igual.
@@ -928,8 +942,9 @@ function aBorrador(k, a) {
              contratos: { dotacion: [...(c.dotacion || [])], dotacion_catalogo: [...(c.dotacion_catalogo || [])], dotacionlegal: [...(c.dotacionlegal || [])],
                           inspecciones: [...(c.inspecciones || [])], actividades: [...(c.actividades || [])] } };
   }
-  if (k === 'academia') return { rol: a.tiene ? a.rol : 'sin_acceso' };
-  if (k === 'caja') return { rol: a.tiene ? 'acceso' : 'sin_acceso' };
+  if (k === 'academia') return { rol: a.tiene ? a.rol : 'sin_acceso',
+                                 clientes: a.tiene && a.rol === 'viewer' && Array.isArray(a.clientes) ? [...a.clientes] : null };
+  if (k === 'caja') return { rol: a.tiene ? (a.nivel === 'consulta' ? 'consulta' : 'total') : 'sin_acceso' };
 }
 // Forma editable → lo que se manda a la base (siempre ordenado, para comparar)
 function carga(k, b) {
@@ -955,6 +970,11 @@ function carga(k, b) {
       dotacionlegal: mods.includes('dotacionlegal') ? ord(b.contratos.dotacionlegal) : [],
       inspecciones: mods.includes('inspecciones') ? ord(b.contratos.inspecciones) : [],
       actividades: mods.includes('actividades') ? ord(b.contratos.actividades) : [] } };
+  }
+  if (k === 'academia') {
+    // clientes: solo para «Solo lectura». null = todos.
+    const clientes = (b.rol !== 'viewer' || b.clientes == null || !clientesAcademia().length) ? null : [...new Set(b.clientes)].sort();
+    return { rol: b.rol, clientes };
   }
   return { rol: b.rol };
 }
@@ -998,6 +1018,30 @@ function editorContratos(mod, b) {
         ${mod === 'dotacion' ? `<label class="c-cat" title="Puede agregar productos al catálogo de EPP en este contrato"><input type="checkbox" data-campo="catalogo" value="${esc(c.id)}"${cat.includes(c.id) ? ' checked' : ''}${marcado ? '' : ' disabled'}> catálogo</label>` : ''}
       </div>`; }).join('') : '<div class="f-val" style="padding:8px">No hay contratos creados.</div>'}</div>
   </div>`;
+}
+
+// Clientes de la Academia: todos, o solo algunos (solo para «Solo lectura»; el administrador ve todos).
+function editorClientesAcademia(b) {
+  if (b.rol === 'admin') return `<div class="f-fila">Clientes o edificios</div><div class="f-val">Todos (es administrador).</div>`;
+  const algunos = b.clientes != null;
+  let html = `<div class="f-fila">Clientes o edificios <span class="f-sub">(de quién ve inducciones)</span></div>
+    <div class="f-radios"><label><input type="radio" name="aca-clientes" data-campo="modo-clientes" value="todos"${algunos ? '' : ' checked'}> Todos los clientes</label>
+      <label><input type="radio" name="aca-clientes" data-campo="modo-clientes" value="algunos"${algunos ? ' checked' : ''}> Solo estos</label></div>`;
+  if (!algunos) return html;
+  const sel = b.clientes, todos = clientesAcademia();
+  // Primero los elegidos, luego los del catálogo, luego los que solo están en registros viejos; cada grupo en orden alfabético.
+  const lista = [...todos].sort((x, y) => (sel.includes(y.clave) - sel.includes(x.clave)) || (y.en_catalogo - x.en_catalogo)
+                                          || x.nombre.localeCompare(y.nombre, 'es'));
+  return html + `<div class="c-caja" data-mod="academia">
+      <div class="c-cab"><b>Clientes de la Academia</b><span class="c-cuenta" data-cuenta="academia">${sel.length} de ${todos.length}</span>
+        <span class="c-botones"><button type="button" class="f-mini" data-accion="aca-clientes-ninguno">Ninguno</button></span></div>
+      ${todos.length > 8 ? '<input class="c-buscar" type="text" placeholder="Buscar cliente" autocomplete="off">' : ''}
+      <div class="c-lista">${lista.map(c => `<div class="c-item" data-nombre="${esc(c.nombre.toLowerCase())}">
+        <label class="c-nom"><input type="checkbox" data-campo="cliente-aca" value="${esc(c.clave)}"${sel.includes(c.clave) ? ' checked' : ''}> ${esc(c.nombre)}${c.en_catalogo ? '' : ' <i>(antiguo)</i>'}</label>
+        <span class="c-act">${c.registros ? c.registros + (c.registros === 1 ? ' registro' : ' registros') : 'sin registros'}</span></div>`).join('')}</div>
+    </div>
+    <div class="f-aviso" data-aviso="sin-clientes"${sel.length ? ' hidden' : ''}>Elige al menos un cliente, o marca «Todos los clientes».</div>
+    <div class="f-ayuda">Solo ve, exporta y certifica las inducciones y reinducciones de estos clientes. Los trabajadores hacen su inducción igual que siempre.</div>`;
 }
 
 // Contratos de RH: todos, o solo algunos (entonces solo ve los empleados de esos contratos).
@@ -1055,10 +1099,10 @@ function htmlPrograma(k) {
   const verRoles = rolesAbiertos.has(k);
   // Dos columnas: a la izquierda el rol y hasta dónde llega; a la derecha el detalle (áreas, secciones, contratos).
   let izq = `<div class="f-fila-rol"><label class="f-fila">${k === 'caja' || k === 'academia' ? 'Acceso' : 'Rol'}</label>
-      ${k === 'caja' ? '' : `<button type="button" class="f-info" data-accion="info-roles" aria-expanded="${verRoles}">ⓘ ${verRoles ? 'Ocultar los roles' : '¿Qué hace cada rol?'}</button>`}</div>
+      <button type="button" class="f-info" data-accion="info-roles" aria-expanded="${verRoles}">ⓘ ${verRoles ? 'Ocultar los roles' : '¿Qué hace cada rol?'}</button></div>
     <select class="f-sel" data-campo="rol">${opcionesSelect(k, b.rol)}</select>
     <div class="f-ayuda">${esc(ayuda)}</div>
-    ${verRoles && k !== 'caja' ? panelRoles(k, b.rol) : ''}`;
+    ${verRoles ? panelRoles(k, b.rol) : ''}`;
   let der = '';
   if (k === 'documental' && b.rol !== 'sin_acceso') {
     if (b.rol === 'admin') der += `<div class="f-fila">Áreas</div><div class="f-val">Todas (es administrador)</div>`;
@@ -1070,6 +1114,7 @@ function htmlPrograma(k) {
     }
   }
   if (k === 'rh' && b.rol !== 'sin_acceso' && contratosRH().length) izq += editorContratosRH(b);
+  if (k === 'academia' && b.rol !== 'sin_acceso' && clientesAcademia().length) der += editorClientesAcademia(b);
   if (k === 'rh' && b.rol !== 'sin_acceso' && seccionesRH().length) der += editorSeccionesRH(b);
   if (k === 'rh' && b.rol !== 'sin_acceso') {
     der += `<div class="f-fila">Seguimientos médicos <span class="f-sub">(datos de salud)</span></div>`;
@@ -1222,6 +1267,15 @@ $('ficha').addEventListener('change', ev => {
     }
     return repintarPrograma(k);
   }
+  if (campo === 'modo-clientes') { b.clientes = el.value === 'algunos' ? (b.clientes || []) : null; return repintarPrograma(k); }
+  if (campo === 'cliente-aca') {
+    b.clientes = el.checked ? [...new Set([...(b.clientes || []), el.value])] : (b.clientes || []).filter(x => x !== el.value);
+    const cuenta = caja.querySelector('[data-cuenta="academia"]');
+    if (cuenta) cuenta.textContent = `${b.clientes.length} de ${clientesAcademia().length}`;
+    const av = caja.querySelector('[data-aviso="sin-clientes"]');
+    if (av) av.hidden = b.clientes.length > 0;
+    return actualizarPie(k);
+  }
   if (campo === 'modo-contratos') {
     b.contratos = el.value === 'algunos' ? (b.contratos || []) : null;
     ajustarParaContratos(b);
@@ -1283,6 +1337,7 @@ $('ficha').addEventListener('click', ev => {
   if (acc === 'deshacer') { borradores[k] = clonar(originales[k]); return repintarPrograma(k); }
   if (acc === 'info-roles') { if (!rolesAbiertos.delete(k)) rolesAbiertos.add(k); return repintarPrograma(k); }
   if (acc === 'rh-contratos-ninguno') { b.contratos = []; return repintarPrograma(k); }
+  if (acc === 'aca-clientes-ninguno') { b.clientes = []; return repintarPrograma(k); }
   if (acc === 'medico-preset') {
     b.medicos = bt.dataset.valor === 'todos' ? [...CLAVES_MEDICOS] : bt.dataset.valor === 'consulta' ? ['ver'] : [];
     return repintarPrograma(k);
@@ -1302,6 +1357,8 @@ function mensajeError(error, k) {
   if (m.includes('contrato_invalido')) return 'Alguno de los contratos ya no existe. Recarga la página y vuelve a intentarlo.';
   if (m.includes('sin_secciones')) return 'Elige al menos una sección de RH, o ponle «Sin acceso».';
   if (m.includes('supervisor_sin_contratos')) return 'Un supervisor siempre trabaja sobre sus contratos: elige al menos uno.';
+  if (m.includes('sin_clientes')) return 'Elige al menos un cliente de la Academia, o marca «Todos los clientes».';
+  if (m.includes('cliente_invalido')) return 'Alguno de los clientes ya no existe. Recarga la página y vuelve a intentarlo.';
   if (m.includes('sin_contratos')) return 'Elige al menos un contrato de RH, o marca «Todos los contratos».';
   if (m.includes('seccion_global_con_contratos')) return 'Con contratos no puede tener Importación, Corrección de datos, Catálogos, Certificados ni Auditoría.';
   if (m.includes('medicos_con_contratos')) return 'Con contratos no puede tener permisos de Seguimientos médicos.';
@@ -1316,6 +1373,8 @@ async function guardarPrograma(k) {
   const b = borradores[k], o = originales[k], nom = NOMBRE_PROG[k];
   if (k === 'rh' && b.rol !== 'sin_acceso' && b.rol !== 'admin' && b.secciones != null && !tieneAlgunaSeccion(b.secciones))
     return aviso(mensajeError('sin_secciones', k), true);
+  if (k === 'academia' && b.rol === 'viewer' && b.clientes != null && !b.clientes.length)
+    return aviso(mensajeError('sin_clientes', k), true);
   if (k === 'rh' && b.rol === 'supervisor' && !(b.contratos || []).length)
     return aviso(mensajeError('supervisor_sin_contratos', k), true);
   if (k === 'rh' && b.rol !== 'sin_acceso' && b.rol !== 'admin' && b.contratos != null && !b.contratos.length)

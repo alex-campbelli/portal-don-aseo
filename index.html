@@ -759,7 +759,7 @@ $('olvido-form').addEventListener('submit', async ev => {
   if (r?.error) {
     const t = String(r.error.message || '') + ' ' + (r.error.status || '');
     err.textContent = /rate|seconds|too many|429/i.test(t)
-      ? 'Ya pediste un enlace hace poco. Espera un minuto y vuelve a intentarlo.'
+      ? 'Ahora mismo no se pueden enviar más correos. Intenta de nuevo en un rato, o pídele al administrador que te cambie la contraseña desde el Portal.'
       : 'No se pudo enviar el correo. Intenta de nuevo en un momento.';
     err.hidden = false;
     return;
